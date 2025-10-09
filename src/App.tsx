@@ -1,13 +1,57 @@
-import { RouterProvider, createRouter } from "@tanstack/react-router";
+import {
+  RouterProvider,
+  createBrowserHistory,
+  createRouter
+} from "@tanstack/react-router"
+import { routeTree } from "./routeTree.gen"
+import { Notifications } from "@mantine/notifications"
+import { ModalsProvider } from "@mantine/modals"
+import { HelmetProvider } from "react-helmet-async"
 
-import { routeTree } from "./routeTree.gen";
+import "./App.css"
+import "@mantine/core/styles.css"
+import "@mantine/notifications/styles.css"
+import "@mantine/carousel/styles.css"
+import "@mantine/dates/styles.css"
 
-import "./App.css";
+import { createTheme, MantineProvider, Modal } from "@mantine/core"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { useAuthAutoRefresh } from "./hooks/use-auth-auto-refresh"
 
-const router = createRouter({ routeTree });
+const router = createRouter({ routeTree, history: createBrowserHistory() })
+
+const theme = createTheme({
+  primaryColor: "indigo",
+  luminanceThreshold: 0.5,
+  components: {
+    Modal: Modal.extend({
+      defaultProps: {
+        overlayProps: { backgroundOpacity: 0.6, blur: 2, color: "black" }
+      }
+    })
+  }
+})
+
+const queryClient = new QueryClient()
 
 function App() {
-  return <RouterProvider router={router} />;
+  useAuthAutoRefresh(60)
+  return (
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <MantineProvider theme={theme}>
+          <ModalsProvider
+            modalProps={{
+              overlayProps: { backgroundOpacity: 0.6, blur: 2, color: "black" }
+            }}
+          >
+            <Notifications />
+            <RouterProvider router={router} />
+          </ModalsProvider>
+        </MantineProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
+  )
 }
 
-export default App;
+export default App

@@ -8,27 +8,56 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as CallbackIndexRouteImport } from './routes/callback/index'
+import { Route as AccountIndexRouteImport } from './routes/account/index'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as IndexImport } from './routes/index'
-import { Route as PostIndexImport } from './routes/post/index'
-
-// Create/Update Routes
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CallbackIndexRoute = CallbackIndexRouteImport.update({
+  id: '/callback/',
+  path: '/callback/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountIndexRoute = AccountIndexRouteImport.update({
+  id: '/account/',
+  path: '/account/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
-const PostIndexRoute = PostIndexImport.update({
-  id: '/post/',
-  path: '/post/',
-  getParentRoute: () => rootRoute,
-} as any)
-
-// Populate the FileRoutesByPath interface
+export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/account': typeof AccountIndexRoute
+  '/callback': typeof CallbackIndexRoute
+}
+export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/account': typeof AccountIndexRoute
+  '/callback': typeof CallbackIndexRoute
+}
+export interface FileRoutesById {
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/account/': typeof AccountIndexRoute
+  '/callback/': typeof CallbackIndexRoute
+}
+export interface FileRouteTypes {
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths: '/' | '/account' | '/callback'
+  fileRoutesByTo: FileRoutesByTo
+  to: '/' | '/account' | '/callback'
+  id: '__root__' | '/' | '/account/' | '/callback/'
+  fileRoutesById: FileRoutesById
+}
+export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  AccountIndexRoute: typeof AccountIndexRoute
+  CallbackIndexRoute: typeof CallbackIndexRoute
+}
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
@@ -36,76 +65,31 @@ declare module '@tanstack/react-router' {
       id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/post/': {
-      id: '/post/'
-      path: '/post'
-      fullPath: '/post'
-      preLoaderRoute: typeof PostIndexImport
-      parentRoute: typeof rootRoute
+    '/callback/': {
+      id: '/callback/'
+      path: '/callback'
+      fullPath: '/callback'
+      preLoaderRoute: typeof CallbackIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account/': {
+      id: '/account/'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
-}
-
-// Create and export the route tree
-
-export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/post': typeof PostIndexRoute
-}
-
-export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/post': typeof PostIndexRoute
-}
-
-export interface FileRoutesById {
-  __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/post/': typeof PostIndexRoute
-}
-
-export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/post'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/post'
-  id: '__root__' | '/' | '/post/'
-  fileRoutesById: FileRoutesById
-}
-
-export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  PostIndexRoute: typeof PostIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  PostIndexRoute: PostIndexRoute,
+  AccountIndexRoute: AccountIndexRoute,
+  CallbackIndexRoute: CallbackIndexRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/post/"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/post/": {
-      "filePath": "post/index.tsx"
-    }
-  }
-}
-ROUTE_MANIFEST_END */
