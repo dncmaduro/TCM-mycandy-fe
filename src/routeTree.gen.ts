@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LegalIndexRouteImport } from './routes/legal/index'
 import { Route as CallbackIndexRouteImport } from './routes/callback/index'
 import { Route as AccountIndexRouteImport } from './routes/account/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalIndexRoute = LegalIndexRouteImport.update({
+  id: '/legal/',
+  path: '/legal/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CallbackIndexRoute = CallbackIndexRouteImport.update({
@@ -33,30 +39,34 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountIndexRoute
   '/callback': typeof CallbackIndexRoute
+  '/legal': typeof LegalIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountIndexRoute
   '/callback': typeof CallbackIndexRoute
+  '/legal': typeof LegalIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/account/': typeof AccountIndexRoute
   '/callback/': typeof CallbackIndexRoute
+  '/legal/': typeof LegalIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/account' | '/callback'
+  fullPaths: '/' | '/account' | '/callback' | '/legal'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/account' | '/callback'
-  id: '__root__' | '/' | '/account/' | '/callback/'
+  to: '/' | '/account' | '/callback' | '/legal'
+  id: '__root__' | '/' | '/account/' | '/callback/' | '/legal/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountIndexRoute: typeof AccountIndexRoute
   CallbackIndexRoute: typeof CallbackIndexRoute
+  LegalIndexRoute: typeof LegalIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/': {
+      id: '/legal/'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/callback/': {
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountIndexRoute: AccountIndexRoute,
   CallbackIndexRoute: CallbackIndexRoute,
+  LegalIndexRoute: LegalIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
