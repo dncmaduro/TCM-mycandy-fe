@@ -5,7 +5,7 @@ export const LoginWithGoogleButton = () => {
   const handleLoginWithGoogle = () => {
     const params = new URLSearchParams({
       client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-      redirect_uri: "http://localhost:3334/api/v1/auth/google/callback",
+      redirect_uri: `${import.meta.env.VITE_BACKEND_URL}/auth/google/callback`,
       response_type: "code",
       access_type: "offline", // để có refresh_token
       prompt: "consent", // ép re-consent nếu thiếu quyền
