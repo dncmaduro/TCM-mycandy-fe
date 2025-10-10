@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useEffect } from "react"
-import { useAuthStore } from "../stores/authState"
-import { Title, Text, Stack, ThemeIcon, Divider } from "@mantine/core"
+import { Title, Text, Stack, ThemeIcon, Divider, Anchor } from "@mantine/core"
 import { IconBrandGoogle } from "@tabler/icons-react"
 import { LoginWithGoogleButton } from "../components/login/login-with-google-button"
 import { AuthLayout } from "../components/layouts/AuthLayout"
+import { useEffect } from "react"
+import { useAuthStore } from "../stores/authState"
 
 export const Route = createFileRoute("/")({
   component: RouteComponent
@@ -52,7 +52,11 @@ function RouteComponent() {
           <LoginWithGoogleButton />
 
           <Text size="xs" ta="center" c="dimmed" opacity={0.7}>
-            Bằng cách đăng nhập, bạn đồng ý với điều khoản sử dụng
+            Bằng cách đăng nhập, bạn đồng ý với{" "}
+            <Anchor href="/legal" size="xs">
+              Điều khoản dịch vụ và Chính sách bảo mật
+            </Anchor>
+            .
           </Text>
         </Stack>
       </Stack>
