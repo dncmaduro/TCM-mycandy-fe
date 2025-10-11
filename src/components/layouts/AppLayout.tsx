@@ -1,4 +1,4 @@
-import { ReactNode, useMemo } from "react"
+import { ReactNode } from "react"
 import {
   AppShell,
   Burger,
@@ -6,7 +6,6 @@ import {
   ActionIcon,
   Text,
   TextInput,
-  ScrollArea,
   Button,
   Menu,
   Avatar,
@@ -15,89 +14,31 @@ import {
   Tooltip,
   Kbd,
   Stack,
-  Paper,
-  UnstyledButton
+  Paper
 } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { Link, useRouterState } from "@tanstack/react-router"
 import {
   IconSearch,
   IconBell,
-  IconListCheck,
-  IconCalendarEvent,
-  IconClockHour4,
   IconLogout,
-  IconUserCircle,
-  IconHome2
+  IconUserCircle
 } from "@tabler/icons-react"
 import { useEnsureAuth } from "../../hooks/use-ensure-auth"
 import { useAuthStore } from "../../stores/authState"
 import { useAuth } from "../../hooks/use-auth"
+import { SidebarItem } from "../navigation/SidebarItem"
+import { SubSidebarItem } from "../navigation/SubSidebarItem"
+import {
+  navItems,
+  subMenus,
+  SECTION_KEYS,
+  type SectionKey,
+  type MenuItem
+} from "../navigation/menuConfig"
 
 interface AppLayoutProps {
-  children: ReactNode
-}
-
-const SidebarItem = ({
-  to,
-  label,
-  Icon,
-  active
-}: {
-  to: string
-  label: string
-  Icon: React.ElementType
-  active: boolean
-}) => {
-  return (
-    <Tooltip label={label} withArrow position="right">
-      <UnstyledButton
-        component={Link}
-        to={to}
-        h={66}
-        aria-current={active ? "page" : undefined}
-        style={{
-          width: "100%",
-          borderRadius: 14,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          gap: 6,
-          transition:
-            "transform 120ms ease, background-color 160ms ease, box-shadow 160ms ease",
-          transform: active ? "translateX(0)" : undefined,
-          background: active
-            ? "linear-gradient(180deg, rgba(99,102,241,.18) 0%, rgba(99,102,241,.10) 100%)"
-            : "transparent",
-          boxShadow: active
-            ? "0 0 0 1px rgba(99,102,241,.45), 0 8px 22px rgba(99,102,241,.30)"
-            : "none"
-        }}
-        onMouseDown={(e) => (e.currentTarget.style.transform = "scale(.98)")}
-        onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-      >
-        <Icon
-          size={18}
-          style={{
-            color: active
-              ? "var(--mantine-color-indigo-5)"
-              : "rgba(0, 0, 0, 0.82)"
-          }}
-        />
-        <Text
-          size="10"
-          c={active ? "indigo.4" : "dimmed"}
-          w={82}
-          ta="center"
-          style={{ lineHeight: 1 }}
-        >
-          {label}
-        </Text>
-      </UnstyledButton>
-    </Tooltip>
-  )
+  children?: ReactNode
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -109,25 +50,18 @@ export function AppLayout({ children }: AppLayoutProps) {
   const user = useAuthStore((s) => s.user)
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
-  const navItems = useMemo(
-    () => [
-      { label: "Tổng quan", to: "/home", icon: IconHome2 },
-      { label: "Nhiệm vụ", to: "/tasks", icon: IconListCheck },
-      { label: "Lịch", to: "/calendar", icon: IconCalendarEvent },
-      {
-        label: "Thời gian làm việc",
-        to: "/time-tracking",
-        icon: IconClockHour4
-      }
-    ],
-    []
+  const currentSection: SectionKey | undefined = SECTION_KEYS.find((k) =>
+    pathname.startsWith(k)
   )
+  const currentSubmenu: MenuItem[] = currentSection
+    ? subMenus[currentSection]
+    : []
 
   return (
     <AppShell
       header={{ height: 64 }}
       navbar={{
-        width: 120,
+        width: 80,
         breakpoint: "sm",
         collapsed: { mobile: !opened }
       }}
@@ -137,7 +71,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         withBorder
         style={{
           backdropFilter: "saturate(180%) blur(6px)",
-          background: "rgba(255,255,255,0.7)",
+          background: "rgba(246,247,249,0.85)",
           boxShadow: "0 2px 10px rgba(0,0,0,0.06)"
         }}
       >
@@ -150,7 +84,6 @@ export function AppLayout({ children }: AppLayoutProps) {
               size="sm"
               h={36}
             />
-            {/* Removed expand/collapse toggle for sidebar */}
             <Button
               variant="subtle"
               component={Link}
@@ -245,18 +178,19 @@ export function AppLayout({ children }: AppLayoutProps) {
       </AppShell.Header>
 
       <AppShell.Navbar
-        p="md"
+        p="sm"
         style={{ background: "transparent", border: "none" }}
       >
-        <ScrollArea type="auto" style={{ height: "100%" }}>
+        <Box style={{ height: "100%" }}>
           <Paper
             withBorder
             shadow="sm"
-            radius="xl"
-            p="sm"
+            radius="lg"
+            bg={"gray.0"}
+            p="xs"
             style={{ height: "100%" }}
           >
-            <Stack gap="xs">
+            <Stack gap={0} align="stretch">
               {navItems.map((item) => {
                 const active =
                   pathname === item.to || pathname.startsWith(item.to)
@@ -272,10 +206,42 @@ export function AppLayout({ children }: AppLayoutProps) {
               })}
             </Stack>
           </Paper>
-        </ScrollArea>
+        </Box>
       </AppShell.Navbar>
 
-      <AppShell.Main>{children}</AppShell.Main>
+      <AppShell.Main>
+        <Box style={{ height: "100%" }}>
+          <Group align="flex-start" gap="sm" wrap="nowrap">
+            {currentSubmenu.length > 0 && (
+              <Paper
+                radius="md"
+                p="sm"
+                w={200}
+                bg={"gray.0"}
+                style={{
+                  border: "1px solid rgba(0,0,0,0.06)",
+                  position: "sticky",
+                  top: 16,
+                  marginLeft: -16
+                }}
+              >
+                <Stack gap="xs">
+                  {currentSubmenu.map((it) => (
+                    <SubSidebarItem
+                      key={it.to}
+                      to={it.to}
+                      label={it.label}
+                      Icon={it.icon}
+                      active={pathname === it.to || pathname.startsWith(it.to)}
+                    />
+                  ))}
+                </Stack>
+              </Paper>
+            )}
+            <Box style={{ flex: 1, minWidth: 0 }}>{children}</Box>
+          </Group>
+        </Box>
+      </AppShell.Main>
     </AppShell>
   )
 }
