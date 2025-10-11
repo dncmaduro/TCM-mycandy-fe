@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LegalIndexRouteImport } from './routes/legal/index'
+import { Route as HomeIndexRouteImport } from './routes/home/index'
 import { Route as CallbackIndexRouteImport } from './routes/callback/index'
 import { Route as AccountIndexRouteImport } from './routes/account/index'
 
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 const LegalIndexRoute = LegalIndexRouteImport.update({
   id: '/legal/',
   path: '/legal/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeIndexRoute = HomeIndexRouteImport.update({
+  id: '/home/',
+  path: '/home/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CallbackIndexRoute = CallbackIndexRouteImport.update({
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountIndexRoute
   '/callback': typeof CallbackIndexRoute
+  '/home': typeof HomeIndexRoute
   '/legal': typeof LegalIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountIndexRoute
   '/callback': typeof CallbackIndexRoute
+  '/home': typeof HomeIndexRoute
   '/legal': typeof LegalIndexRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account/': typeof AccountIndexRoute
   '/callback/': typeof CallbackIndexRoute
+  '/home/': typeof HomeIndexRoute
   '/legal/': typeof LegalIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/account' | '/callback' | '/legal'
+  fullPaths: '/' | '/account' | '/callback' | '/home' | '/legal'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/account' | '/callback' | '/legal'
-  id: '__root__' | '/' | '/account/' | '/callback/' | '/legal/'
+  to: '/' | '/account' | '/callback' | '/home' | '/legal'
+  id: '__root__' | '/' | '/account/' | '/callback/' | '/home/' | '/legal/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountIndexRoute: typeof AccountIndexRoute
   CallbackIndexRoute: typeof CallbackIndexRoute
+  HomeIndexRoute: typeof HomeIndexRoute
   LegalIndexRoute: typeof LegalIndexRoute
 }
 
@@ -83,6 +93,13 @@ declare module '@tanstack/react-router' {
       path: '/legal'
       fullPath: '/legal'
       preLoaderRoute: typeof LegalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home/': {
+      id: '/home/'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/callback/': {
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountIndexRoute: AccountIndexRoute,
   CallbackIndexRoute: CallbackIndexRoute,
+  HomeIndexRoute: HomeIndexRoute,
   LegalIndexRoute: LegalIndexRoute,
 }
 export const routeTree = rootRouteImport
