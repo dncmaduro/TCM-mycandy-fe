@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
 import { useAuthStore } from "../stores/authState"
+import { useAuth } from "./use-auth"
 
 /**
  * Setup a one-shot timer to proactively refresh access token before it expires.
@@ -7,11 +8,12 @@ import { useAuthStore } from "../stores/authState"
  */
 export function useAuthAutoRefresh(preRefreshSeconds: number = 60) {
   const expiresAt = useAuthStore((s) => s.expiresAt)
-  const refreshToken = useAuthStore((s) => s.refreshToken)
+  const refreshTokenValue = useAuthStore((s) => s.refreshToken)
   const isTokenExpired = useAuthStore((s) => s.isTokenExpired())
   const isRefreshExpired = useAuthStore((s) => s.isRefreshExpired())
   const clearAuth = useAuthStore((s) => s.clearAuth)
   const setAuth = useAuthStore((s) => s.setAuth)
+  const { refreshToken } = useAuth()
 
   const timeoutRef = useRef<number | null>(null)
 
@@ -22,7 +24,7 @@ export function useAuthAutoRefresh(preRefreshSeconds: number = 60) {
       timeoutRef.current = null
     }
 
-    if (!expiresAt || !refreshToken) return
+    if (!expiresAt || !refreshTokenValue) return
     if (isRefreshExpired) {
       clearAuth()
       return
@@ -36,29 +38,14 @@ export function useAuthAutoRefresh(preRefreshSeconds: number = 60) {
     const delay = fireIn <= 0 ? 0 : fireIn
 
     timeoutRef.current = window.setTimeout(async () => {
-      // manual refresh using existing logic in axios util (fetch refresh endpoint)
       try {
-        const backendUrl = import.meta.env.VITE_BACKEND_URL
-        const resp = await fetch(`${backendUrl}/auth/refresh-token`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json"
-          },
-          body: JSON.stringify({ refreshToken })
-        })
-        if (!resp.ok) throw new Error("refresh failed")
-        const data: {
-          accessToken: string
-          refreshToken?: string
-          accessTokenTtlSec?: number
-          refreshTokenTtlSec?: number
-        } = await resp.json()
+        const resp = await refreshToken({ refreshToken: refreshTokenValue })
+        const data = resp.data
         setAuth({
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
-          expiresIn: data.accessTokenTtlSec,
-          refreshExpiresIn: data.refreshTokenTtlSec
+          accessToken: data.token,
+          refreshToken: data.rt,
+          expiresIn: data.tokenExp,
+          refreshExpiresIn: data.rtExp
         })
       } catch (e) {
         clearAuth()
@@ -70,11 +57,12 @@ export function useAuthAutoRefresh(preRefreshSeconds: number = 60) {
     }
   }, [
     expiresAt,
-    refreshToken,
+    refreshTokenValue,
     isTokenExpired,
     isRefreshExpired,
     preRefreshSeconds,
     clearAuth,
-    setAuth
+    setAuth,
+    refreshToken
   ])
 }

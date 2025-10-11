@@ -16,7 +16,7 @@ export const useAuth = () => {
   const refreshToken = async (req: RefreshTokenRequest) => {
     return callApi<RefreshTokenRequest, RefreshTokenResponse>({
       method: "POST",
-      path: "/auth/refresh-token",
+      path: "/auth/refresh",
       data: req
     })
   }

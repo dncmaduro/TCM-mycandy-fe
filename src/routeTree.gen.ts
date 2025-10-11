@@ -10,14 +10,31 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TimeTrackingIndexRouteImport } from './routes/time-tracking/index'
+import { Route as TasksIndexRouteImport } from './routes/tasks/index'
 import { Route as LegalIndexRouteImport } from './routes/legal/index'
 import { Route as HomeIndexRouteImport } from './routes/home/index'
 import { Route as CallbackIndexRouteImport } from './routes/callback/index'
+import { Route as CalendarIndexRouteImport } from './routes/calendar/index'
 import { Route as AccountIndexRouteImport } from './routes/account/index'
+import { Route as TimeTrackingTimeoffIndexRouteImport } from './routes/time-tracking/timeoff/index'
+import { Route as TimeTrackingRequestsIndexRouteImport } from './routes/time-tracking/requests/index'
+import { Route as TasksWeeklyIndexRouteImport } from './routes/tasks/weekly/index'
+import { Route as CalendarMeetingsIndexRouteImport } from './routes/calendar/meetings/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TimeTrackingIndexRoute = TimeTrackingIndexRouteImport.update({
+  id: '/time-tracking/',
+  path: '/time-tracking/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TasksIndexRoute = TasksIndexRouteImport.update({
+  id: '/tasks/',
+  path: '/tasks/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LegalIndexRoute = LegalIndexRouteImport.update({
@@ -35,48 +52,140 @@ const CallbackIndexRoute = CallbackIndexRouteImport.update({
   path: '/callback/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CalendarIndexRoute = CalendarIndexRouteImport.update({
+  id: '/calendar/',
+  path: '/calendar/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountIndexRoute = AccountIndexRouteImport.update({
   id: '/account/',
   path: '/account/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TimeTrackingTimeoffIndexRoute =
+  TimeTrackingTimeoffIndexRouteImport.update({
+    id: '/time-tracking/timeoff/',
+    path: '/time-tracking/timeoff/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const TimeTrackingRequestsIndexRoute =
+  TimeTrackingRequestsIndexRouteImport.update({
+    id: '/time-tracking/requests/',
+    path: '/time-tracking/requests/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const TasksWeeklyIndexRoute = TasksWeeklyIndexRouteImport.update({
+  id: '/tasks/weekly/',
+  path: '/tasks/weekly/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarMeetingsIndexRoute = CalendarMeetingsIndexRouteImport.update({
+  id: '/calendar/meetings/',
+  path: '/calendar/meetings/',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountIndexRoute
+  '/calendar': typeof CalendarIndexRoute
   '/callback': typeof CallbackIndexRoute
   '/home': typeof HomeIndexRoute
   '/legal': typeof LegalIndexRoute
+  '/tasks': typeof TasksIndexRoute
+  '/time-tracking': typeof TimeTrackingIndexRoute
+  '/calendar/meetings': typeof CalendarMeetingsIndexRoute
+  '/tasks/weekly': typeof TasksWeeklyIndexRoute
+  '/time-tracking/requests': typeof TimeTrackingRequestsIndexRoute
+  '/time-tracking/timeoff': typeof TimeTrackingTimeoffIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountIndexRoute
+  '/calendar': typeof CalendarIndexRoute
   '/callback': typeof CallbackIndexRoute
   '/home': typeof HomeIndexRoute
   '/legal': typeof LegalIndexRoute
+  '/tasks': typeof TasksIndexRoute
+  '/time-tracking': typeof TimeTrackingIndexRoute
+  '/calendar/meetings': typeof CalendarMeetingsIndexRoute
+  '/tasks/weekly': typeof TasksWeeklyIndexRoute
+  '/time-tracking/requests': typeof TimeTrackingRequestsIndexRoute
+  '/time-tracking/timeoff': typeof TimeTrackingTimeoffIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/account/': typeof AccountIndexRoute
+  '/calendar/': typeof CalendarIndexRoute
   '/callback/': typeof CallbackIndexRoute
   '/home/': typeof HomeIndexRoute
   '/legal/': typeof LegalIndexRoute
+  '/tasks/': typeof TasksIndexRoute
+  '/time-tracking/': typeof TimeTrackingIndexRoute
+  '/calendar/meetings/': typeof CalendarMeetingsIndexRoute
+  '/tasks/weekly/': typeof TasksWeeklyIndexRoute
+  '/time-tracking/requests/': typeof TimeTrackingRequestsIndexRoute
+  '/time-tracking/timeoff/': typeof TimeTrackingTimeoffIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/account' | '/callback' | '/home' | '/legal'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/calendar'
+    | '/callback'
+    | '/home'
+    | '/legal'
+    | '/tasks'
+    | '/time-tracking'
+    | '/calendar/meetings'
+    | '/tasks/weekly'
+    | '/time-tracking/requests'
+    | '/time-tracking/timeoff'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/account' | '/callback' | '/home' | '/legal'
-  id: '__root__' | '/' | '/account/' | '/callback/' | '/home/' | '/legal/'
+  to:
+    | '/'
+    | '/account'
+    | '/calendar'
+    | '/callback'
+    | '/home'
+    | '/legal'
+    | '/tasks'
+    | '/time-tracking'
+    | '/calendar/meetings'
+    | '/tasks/weekly'
+    | '/time-tracking/requests'
+    | '/time-tracking/timeoff'
+  id:
+    | '__root__'
+    | '/'
+    | '/account/'
+    | '/calendar/'
+    | '/callback/'
+    | '/home/'
+    | '/legal/'
+    | '/tasks/'
+    | '/time-tracking/'
+    | '/calendar/meetings/'
+    | '/tasks/weekly/'
+    | '/time-tracking/requests/'
+    | '/time-tracking/timeoff/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountIndexRoute: typeof AccountIndexRoute
+  CalendarIndexRoute: typeof CalendarIndexRoute
   CallbackIndexRoute: typeof CallbackIndexRoute
   HomeIndexRoute: typeof HomeIndexRoute
   LegalIndexRoute: typeof LegalIndexRoute
+  TasksIndexRoute: typeof TasksIndexRoute
+  TimeTrackingIndexRoute: typeof TimeTrackingIndexRoute
+  CalendarMeetingsIndexRoute: typeof CalendarMeetingsIndexRoute
+  TasksWeeklyIndexRoute: typeof TasksWeeklyIndexRoute
+  TimeTrackingRequestsIndexRoute: typeof TimeTrackingRequestsIndexRoute
+  TimeTrackingTimeoffIndexRoute: typeof TimeTrackingTimeoffIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -86,6 +195,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/time-tracking/': {
+      id: '/time-tracking/'
+      path: '/time-tracking'
+      fullPath: '/time-tracking'
+      preLoaderRoute: typeof TimeTrackingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks/': {
+      id: '/tasks/'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof TasksIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal/': {
@@ -109,11 +232,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CallbackIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/calendar/': {
+      id: '/calendar/'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account/': {
       id: '/account/'
       path: '/account'
       fullPath: '/account'
       preLoaderRoute: typeof AccountIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/time-tracking/timeoff/': {
+      id: '/time-tracking/timeoff/'
+      path: '/time-tracking/timeoff'
+      fullPath: '/time-tracking/timeoff'
+      preLoaderRoute: typeof TimeTrackingTimeoffIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/time-tracking/requests/': {
+      id: '/time-tracking/requests/'
+      path: '/time-tracking/requests'
+      fullPath: '/time-tracking/requests'
+      preLoaderRoute: typeof TimeTrackingRequestsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks/weekly/': {
+      id: '/tasks/weekly/'
+      path: '/tasks/weekly'
+      fullPath: '/tasks/weekly'
+      preLoaderRoute: typeof TasksWeeklyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar/meetings/': {
+      id: '/calendar/meetings/'
+      path: '/calendar/meetings'
+      fullPath: '/calendar/meetings'
+      preLoaderRoute: typeof CalendarMeetingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -122,9 +280,16 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountIndexRoute: AccountIndexRoute,
+  CalendarIndexRoute: CalendarIndexRoute,
   CallbackIndexRoute: CallbackIndexRoute,
   HomeIndexRoute: HomeIndexRoute,
   LegalIndexRoute: LegalIndexRoute,
+  TasksIndexRoute: TasksIndexRoute,
+  TimeTrackingIndexRoute: TimeTrackingIndexRoute,
+  CalendarMeetingsIndexRoute: CalendarMeetingsIndexRoute,
+  TasksWeeklyIndexRoute: TasksWeeklyIndexRoute,
+  TimeTrackingRequestsIndexRoute: TimeTrackingRequestsIndexRoute,
+  TimeTrackingTimeoffIndexRoute: TimeTrackingTimeoffIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
