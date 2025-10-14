@@ -4,6 +4,8 @@ import {
   ApproveUserResponse,
   GetMeResponse,
   GetUserResponse,
+  PublicSearchUsersParams,
+  PublicSearchUsersResponse,
   RejectUserResponse,
   SearchUsersParams,
   SearchUsersResponse,
@@ -62,12 +64,22 @@ export const useUsers = () => {
     })
   }
 
+  const publicSearchUsers = async (params: PublicSearchUsersParams) => {
+    return callApi<never, PublicSearchUsersResponse>({
+      method: "GET",
+      path: "/users/public/search",
+      params,
+      token: accessToken || undefined
+    })
+  }
+
   return {
     getMe,
     approveUser,
     rejectUser,
     suspendUser,
     searchUsers,
-    getUser
+    getUser,
+    publicSearchUsers
   }
 }
