@@ -14,7 +14,8 @@ import {
   Tooltip,
   Kbd,
   Stack,
-  Paper
+  Paper,
+  ScrollArea
 } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { Link, useRouterState } from "@tanstack/react-router"
@@ -25,17 +26,20 @@ import {
   IconUserCircle
 } from "@tabler/icons-react"
 import { useEnsureAuth } from "../../hooks/use-ensure-auth"
-import { useAuthStore } from "../../stores/authState"
 import { useAuth } from "../../hooks/use-auth"
 import { SidebarItem } from "../navigation/SidebarItem"
 import { SubSidebarItem } from "../navigation/SubSidebarItem"
 import {
-  navItems,
-  subMenus,
   SECTION_KEYS,
   type SectionKey,
-  type MenuItem
+  type MenuItem,
+  getVisibleNavItems,
+  getVisibleSubMenu
 } from "../navigation/menuConfig"
+import { useRoles } from "../../hooks/use-roles"
+import { useQuery } from "@tanstack/react-query"
+import { Role } from "../../constants/role"
+import { useUsers } from "../../hooks/use-users"
 
 interface AppLayoutProps {
   children?: ReactNode
@@ -47,21 +51,34 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const [opened, { toggle }] = useDisclosure()
   const { logout } = useAuth()
-  const user = useAuthStore((s) => s.user)
+  const { getOwnRole } = useRoles()
+  const { getMe } = useUsers()
+  const { data: roleData } = useQuery({
+    queryKey: ["own-role"],
+    queryFn: () => getOwnRole(),
+    staleTime: Infinity
+  })
+  const { data: meData } = useQuery({
+    queryKey: ["me"],
+    queryFn: () => getMe(),
+    staleTime: Infinity
+  })
+  const role = (roleData?.data.role || "user") as Role
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
   const currentSection: SectionKey | undefined = SECTION_KEYS.find((k) =>
     pathname.startsWith(k)
   )
+  const visibleNav = getVisibleNavItems(role)
   const currentSubmenu: MenuItem[] = currentSection
-    ? subMenus[currentSection]
+    ? getVisibleSubMenu(currentSection, role)
     : []
 
   return (
     <AppShell
       header={{ height: 64 }}
       navbar={{
-        width: 80,
+        width: 64,
         breakpoint: "sm",
         collapsed: { mobile: !opened }
       }}
@@ -146,16 +163,20 @@ export function AppLayout({ children }: AppLayoutProps) {
                   size="compact-md"
                   h={36}
                   leftSection={
-                    <Avatar radius="xl" size={22} src={user?.avatar} />
+                    <Avatar
+                      radius="xl"
+                      size={22}
+                      src={meData?.data.user.avatarUrl}
+                    />
                   }
                   styles={() => ({ root: { paddingLeft: 6, paddingRight: 8 } })}
                 >
                   <Stack gap={0} align="flex-start">
                     <Text size="sm" fw={600} lh={1.1}>
-                      {user?.name ?? "Tài khoản"}
+                      {meData?.data.user.name ?? "Tài khoản"}
                     </Text>
                     <Text size="xs" c="dimmed" lh={1.1}>
-                      {user?.email ?? ""}
+                      {meData?.data.user.email ?? ""}
                     </Text>
                   </Stack>
                 </Button>
@@ -181,17 +202,16 @@ export function AppLayout({ children }: AppLayoutProps) {
         p="sm"
         style={{ background: "transparent", border: "none" }}
       >
-        <Box style={{ height: "100%" }}>
+        <ScrollArea type="auto" style={{ height: "100%" }}>
           <Paper
             withBorder
             shadow="sm"
-            radius="lg"
-            bg={"gray.0"}
+            radius="xl"
             p="xs"
             style={{ height: "100%" }}
           >
-            <Stack gap={0} align="stretch">
-              {navItems.map((item) => {
+            <Stack gap={6} align="stretch">
+              {visibleNav.map((item) => {
                 const active =
                   pathname === item.to || pathname.startsWith(item.to)
                 return (
@@ -206,7 +226,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               })}
             </Stack>
           </Paper>
-        </Box>
+        </ScrollArea>
       </AppShell.Navbar>
 
       <AppShell.Main>

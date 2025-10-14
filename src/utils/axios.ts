@@ -56,6 +56,7 @@ type AxiosCallApi<D> = {
   customUrl?: string
   method: AxiosRequestConfig["method"]
   headers?: Record<string, string>
+  params?: Record<string, any>
 }
 
 export async function callApi<D = unknown, T = unknown>({
@@ -64,7 +65,8 @@ export async function callApi<D = unknown, T = unknown>({
   token,
   customUrl,
   method,
-  headers
+  headers,
+  params
 }: AxiosCallApi<D>): Promise<AxiosResponse<T>> {
   const convertedHeaders: Record<string, string> = {
     "Content-Type": "application/json",
@@ -84,8 +86,17 @@ export async function callApi<D = unknown, T = unknown>({
     convertedHeaders["Authorization"] = `Bearer ${finalToken}`
   }
 
+  const baseUrl = customUrl ?? import.meta.env.VITE_BACKEND_URL
+  let url = baseUrl + path
+  if (params) {
+    const qs = toQueryString(params)
+    if (qs) {
+      url += (url.includes("?") ? "&" : "?") + qs
+    }
+  }
+
   const response = await axios<T>({
-    url: (customUrl ?? import.meta.env.VITE_BACKEND_URL) + path,
+    url,
     headers: convertedHeaders,
     data,
     method,
@@ -102,7 +113,7 @@ export async function callApi<D = unknown, T = unknown>({
     if (newToken) {
       convertedHeaders["Authorization"] = `Bearer ${newToken}`
       return axios<T>({
-        url: (customUrl ?? import.meta.env.VITE_BACKEND_URL) + path,
+        url,
         headers: convertedHeaders,
         data,
         method
@@ -111,4 +122,12 @@ export async function callApi<D = unknown, T = unknown>({
   }
 
   return response
+}
+
+export function toQueryString(params: Record<string, any>): string {
+  const esc = encodeURIComponent
+  return Object.entries(params)
+    .filter(([_, v]) => v !== undefined && v !== null && v !== "")
+    .map(([k, v]) => `${esc(k)}=${esc(v)}`)
+    .join("&")
 }
