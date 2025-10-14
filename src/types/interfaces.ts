@@ -3,7 +3,7 @@ export type UserStatus = "pending" | "active" | "rejected" | "suspended"
 export interface IUser {
   _id: string
   email: string
-  name?: string
+  name: string
   avatarUrl?: string
   googleSub: string
   status: UserStatus
@@ -13,4 +13,31 @@ export interface IUser {
   consentCalendar: boolean
   createdAt: Date
   updatedAt: Date
+}
+
+export type TaskStatus =
+  | "new"
+  | "in_progress"
+  | "completed"
+  | "archived"
+  | "canceled"
+  | "reviewing"
+
+export type TaskPriority = "low" | "medium" | "high" | "urgent"
+
+export interface ITask {
+  _id: string
+  title: string
+  description?: string
+  parentTaskId?: string | null
+  status: TaskStatus
+  priority: TaskPriority
+  createdBy: string
+  assignedTo?: string | null
+  dueDate?: Date | null
+  completedAt?: Date | null
+  createdAt: Date
+  updatedAt: Date
+  deletedAt?: Date | null
+  tags?: string[]
 }

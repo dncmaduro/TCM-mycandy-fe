@@ -1,5 +1,5 @@
 import { Role } from "../constants/role"
-import { IUser } from "./interfaces"
+import { ITask, IUser, TaskPriority, TaskStatus } from "./interfaces"
 
 /** @interface */
 export interface RefreshTokenRequest {
@@ -90,4 +90,94 @@ export interface RemoveRoleResponse {
 export interface GetOwnRoleResponse {
   userId: string
   role: string
+}
+
+/** @interface */
+export interface CreateTaskRequest {
+  title: string
+  description?: string
+  parentTaskId?: string
+  priority?: TaskPriority
+  assignedTo?: string
+  dueDate?: Date
+  tags?: string[]
+}
+
+/** @interface */
+export interface CreateTaskResponse {
+  task: ITask
+}
+
+/** @interface */
+export interface UpdateTaskRequest {
+  title?: string
+  description?: string
+  status?: TaskStatus
+  priority?: TaskPriority
+  assignedTo?: string
+  dueDate?: Date
+  tags?: string[]
+}
+
+/** @interface */
+export interface UpdateTaskResponse {
+  task: ITask
+}
+
+/** @interface */
+export interface DeleteTaskResponse {
+  task: ITask | null
+}
+
+/** @interface */
+export interface AssignTaskRequest {
+  assignedTo?: string
+}
+
+/** @interface */
+export interface AssignTaskResponse {
+  task: ITask
+}
+
+/** @interface */
+export interface SearchTasksParams {
+  searchText?: string
+  createdBy?: string
+  assignedTo?: string
+  status?: TaskStatus
+  priority?: TaskPriority
+  dueBefore?: string
+  dueAfter?: string
+  tags?: string[]
+  page?: number
+  limit?: number
+}
+
+/** @interface */
+export interface SearchTasksResponse {
+  data: ITask[]
+  totalPages: number
+}
+
+/** @interface */
+export interface GetSubtasksResponse {
+  subtasks: ITask[]
+}
+
+/** @interface */
+export interface GetTaskResponse {
+  task: ITask | null
+}
+
+/** @interface */
+export interface PublicSearchUsersParams {
+  searchText?: string
+  page?: number
+  limit?: number
+}
+
+/** @interface */
+export interface PublicSearchUsersResponse {
+  data: IUser[]
+  totalPages: number
 }

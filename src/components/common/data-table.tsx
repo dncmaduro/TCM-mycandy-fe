@@ -44,6 +44,7 @@ export type DataTableProps<TData, TValue> = {
   page?: number
   totalPages?: number
   onPageChange?: (page: number) => void
+  onPageSizeChange?: (pageSize: number) => void
 
   getRowId?: (originalRow: TData, index: number, parent?: Row<TData>) => string
   onRowSelectionChange?: (selectedRows: TData[]) => void
@@ -65,6 +66,7 @@ export function DataTable<TData, TValue>({
   page,
   totalPages,
   onPageChange,
+  onPageSizeChange,
   getRowId,
   onRowSelectionChange,
   onRowClick
@@ -147,7 +149,9 @@ export function DataTable<TData, TValue>({
     }
   }, [rowSelection, table, onRowSelectionChange])
 
-  const pageSizeValue = String(table.getState().pagination.pageSize)
+  const pageSizeValue = String(
+    onPageSizeChange ? initialPageSize : table.getState().pagination.pageSize
+  )
 
   // Compute pagination values (controlled vs uncontrolled)
   const currentPage = page ?? table.getState().pagination.pageIndex + 1
@@ -316,7 +320,11 @@ export function DataTable<TData, TValue>({
             onChange={(value) => {
               if (!value) return
               const n = Number(value)
-              table.setPageSize(n)
+              if (onPageSizeChange) {
+                onPageSizeChange(n)
+              } else {
+                table.setPageSize(n)
+              }
             }}
             data={pageSizeOptions.map((n) => ({
               value: String(n),
