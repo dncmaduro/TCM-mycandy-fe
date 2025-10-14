@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { AppLayout } from "../../components/layouts/AppLayout"
 import { useEffect } from "react"
 import { getFirstSubMenuPath } from "../../components/navigation/menuConfig"
+import { useAuthStore } from "../../stores/authState"
 
 export const Route = createFileRoute("/calendar/")({
   component: RouteComponent
@@ -9,9 +10,10 @@ export const Route = createFileRoute("/calendar/")({
 
 function RouteComponent() {
   const navigate = useNavigate()
+  const role = (useAuthStore((s) => s.user) as any)?.role
   useEffect(() => {
-    const first = getFirstSubMenuPath("/calendar")
+    const first = getFirstSubMenuPath("/calendar", role)
     if (first) navigate({ to: first })
-  }, [navigate])
+  }, [navigate, role])
   return <AppLayout />
 }

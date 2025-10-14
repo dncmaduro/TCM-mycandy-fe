@@ -49,7 +49,7 @@ export function SidebarItem({ to, label, Icon, active }: SidebarItemProps) {
           }}
         />
         <Text
-          size="10"
+          size="9"
           c={active ? "indigo.4" : "dimmed"}
           w={82}
           ta="center"

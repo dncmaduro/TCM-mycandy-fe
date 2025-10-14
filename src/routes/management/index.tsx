@@ -1,10 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { AppLayout } from "../../components/layouts/AppLayout"
+import { useAuthStore } from "../../stores/authState"
 import { useEffect } from "react"
 import { getFirstSubMenuPath } from "../../components/navigation/menuConfig"
-import { useAuthStore } from "../../stores/authState"
 
-export const Route = createFileRoute("/time-tracking/")({
+export const Route = createFileRoute("/management/")({
   component: RouteComponent
 })
 
@@ -12,8 +11,8 @@ function RouteComponent() {
   const navigate = useNavigate()
   const role = (useAuthStore((s) => s.user) as any)?.role
   useEffect(() => {
-    const first = getFirstSubMenuPath("/time-tracking", role)
+    const first = getFirstSubMenuPath("/management", role)
     if (first) navigate({ to: first })
   }, [navigate, role])
-  return <AppLayout />
+  return <div>Hello "/management/"!</div>
 }

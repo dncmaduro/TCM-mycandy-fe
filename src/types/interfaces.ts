@@ -1,6 +1,7 @@
 export type UserStatus = "pending" | "active" | "rejected" | "suspended"
 
 export interface IUser {
+  _id: string
   email: string
   name?: string
   avatarUrl?: string

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TimeTrackingIndexRouteImport } from './routes/time-tracking/index'
 import { Route as TasksIndexRouteImport } from './routes/tasks/index'
+import { Route as ManagementIndexRouteImport } from './routes/management/index'
 import { Route as LegalIndexRouteImport } from './routes/legal/index'
 import { Route as HomeIndexRouteImport } from './routes/home/index'
 import { Route as CallbackIndexRouteImport } from './routes/callback/index'
@@ -20,7 +21,9 @@ import { Route as AccountIndexRouteImport } from './routes/account/index'
 import { Route as TimeTrackingTimeoffIndexRouteImport } from './routes/time-tracking/timeoff/index'
 import { Route as TimeTrackingRequestsIndexRouteImport } from './routes/time-tracking/requests/index'
 import { Route as TasksWeeklyIndexRouteImport } from './routes/tasks/weekly/index'
+import { Route as ManagementUsersIndexRouteImport } from './routes/management/users/index'
 import { Route as CalendarMeetingsIndexRouteImport } from './routes/calendar/meetings/index'
+import { Route as ManagementUsersUserIdRouteImport } from './routes/management/users/$userId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -35,6 +38,11 @@ const TimeTrackingIndexRoute = TimeTrackingIndexRouteImport.update({
 const TasksIndexRoute = TasksIndexRouteImport.update({
   id: '/tasks/',
   path: '/tasks/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManagementIndexRoute = ManagementIndexRouteImport.update({
+  id: '/management/',
+  path: '/management/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LegalIndexRoute = LegalIndexRouteImport.update({
@@ -79,9 +87,19 @@ const TasksWeeklyIndexRoute = TasksWeeklyIndexRouteImport.update({
   path: '/tasks/weekly/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ManagementUsersIndexRoute = ManagementUsersIndexRouteImport.update({
+  id: '/management/users/',
+  path: '/management/users/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CalendarMeetingsIndexRoute = CalendarMeetingsIndexRouteImport.update({
   id: '/calendar/meetings/',
   path: '/calendar/meetings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManagementUsersUserIdRoute = ManagementUsersUserIdRouteImport.update({
+  id: '/management/users/$userId',
+  path: '/management/users/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -92,9 +110,12 @@ export interface FileRoutesByFullPath {
   '/callback': typeof CallbackIndexRoute
   '/home': typeof HomeIndexRoute
   '/legal': typeof LegalIndexRoute
+  '/management': typeof ManagementIndexRoute
   '/tasks': typeof TasksIndexRoute
   '/time-tracking': typeof TimeTrackingIndexRoute
+  '/management/users/$userId': typeof ManagementUsersUserIdRoute
   '/calendar/meetings': typeof CalendarMeetingsIndexRoute
+  '/management/users': typeof ManagementUsersIndexRoute
   '/tasks/weekly': typeof TasksWeeklyIndexRoute
   '/time-tracking/requests': typeof TimeTrackingRequestsIndexRoute
   '/time-tracking/timeoff': typeof TimeTrackingTimeoffIndexRoute
@@ -106,9 +127,12 @@ export interface FileRoutesByTo {
   '/callback': typeof CallbackIndexRoute
   '/home': typeof HomeIndexRoute
   '/legal': typeof LegalIndexRoute
+  '/management': typeof ManagementIndexRoute
   '/tasks': typeof TasksIndexRoute
   '/time-tracking': typeof TimeTrackingIndexRoute
+  '/management/users/$userId': typeof ManagementUsersUserIdRoute
   '/calendar/meetings': typeof CalendarMeetingsIndexRoute
+  '/management/users': typeof ManagementUsersIndexRoute
   '/tasks/weekly': typeof TasksWeeklyIndexRoute
   '/time-tracking/requests': typeof TimeTrackingRequestsIndexRoute
   '/time-tracking/timeoff': typeof TimeTrackingTimeoffIndexRoute
@@ -121,9 +145,12 @@ export interface FileRoutesById {
   '/callback/': typeof CallbackIndexRoute
   '/home/': typeof HomeIndexRoute
   '/legal/': typeof LegalIndexRoute
+  '/management/': typeof ManagementIndexRoute
   '/tasks/': typeof TasksIndexRoute
   '/time-tracking/': typeof TimeTrackingIndexRoute
+  '/management/users/$userId': typeof ManagementUsersUserIdRoute
   '/calendar/meetings/': typeof CalendarMeetingsIndexRoute
+  '/management/users/': typeof ManagementUsersIndexRoute
   '/tasks/weekly/': typeof TasksWeeklyIndexRoute
   '/time-tracking/requests/': typeof TimeTrackingRequestsIndexRoute
   '/time-tracking/timeoff/': typeof TimeTrackingTimeoffIndexRoute
@@ -137,9 +164,12 @@ export interface FileRouteTypes {
     | '/callback'
     | '/home'
     | '/legal'
+    | '/management'
     | '/tasks'
     | '/time-tracking'
+    | '/management/users/$userId'
     | '/calendar/meetings'
+    | '/management/users'
     | '/tasks/weekly'
     | '/time-tracking/requests'
     | '/time-tracking/timeoff'
@@ -151,9 +181,12 @@ export interface FileRouteTypes {
     | '/callback'
     | '/home'
     | '/legal'
+    | '/management'
     | '/tasks'
     | '/time-tracking'
+    | '/management/users/$userId'
     | '/calendar/meetings'
+    | '/management/users'
     | '/tasks/weekly'
     | '/time-tracking/requests'
     | '/time-tracking/timeoff'
@@ -165,9 +198,12 @@ export interface FileRouteTypes {
     | '/callback/'
     | '/home/'
     | '/legal/'
+    | '/management/'
     | '/tasks/'
     | '/time-tracking/'
+    | '/management/users/$userId'
     | '/calendar/meetings/'
+    | '/management/users/'
     | '/tasks/weekly/'
     | '/time-tracking/requests/'
     | '/time-tracking/timeoff/'
@@ -180,9 +216,12 @@ export interface RootRouteChildren {
   CallbackIndexRoute: typeof CallbackIndexRoute
   HomeIndexRoute: typeof HomeIndexRoute
   LegalIndexRoute: typeof LegalIndexRoute
+  ManagementIndexRoute: typeof ManagementIndexRoute
   TasksIndexRoute: typeof TasksIndexRoute
   TimeTrackingIndexRoute: typeof TimeTrackingIndexRoute
+  ManagementUsersUserIdRoute: typeof ManagementUsersUserIdRoute
   CalendarMeetingsIndexRoute: typeof CalendarMeetingsIndexRoute
+  ManagementUsersIndexRoute: typeof ManagementUsersIndexRoute
   TasksWeeklyIndexRoute: typeof TasksWeeklyIndexRoute
   TimeTrackingRequestsIndexRoute: typeof TimeTrackingRequestsIndexRoute
   TimeTrackingTimeoffIndexRoute: typeof TimeTrackingTimeoffIndexRoute
@@ -209,6 +248,13 @@ declare module '@tanstack/react-router' {
       path: '/tasks'
       fullPath: '/tasks'
       preLoaderRoute: typeof TasksIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/': {
+      id: '/management/'
+      path: '/management'
+      fullPath: '/management'
+      preLoaderRoute: typeof ManagementIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal/': {
@@ -267,11 +313,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TasksWeeklyIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/management/users/': {
+      id: '/management/users/'
+      path: '/management/users'
+      fullPath: '/management/users'
+      preLoaderRoute: typeof ManagementUsersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/calendar/meetings/': {
       id: '/calendar/meetings/'
       path: '/calendar/meetings'
       fullPath: '/calendar/meetings'
       preLoaderRoute: typeof CalendarMeetingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/users/$userId': {
+      id: '/management/users/$userId'
+      path: '/management/users/$userId'
+      fullPath: '/management/users/$userId'
+      preLoaderRoute: typeof ManagementUsersUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -284,9 +344,12 @@ const rootRouteChildren: RootRouteChildren = {
   CallbackIndexRoute: CallbackIndexRoute,
   HomeIndexRoute: HomeIndexRoute,
   LegalIndexRoute: LegalIndexRoute,
+  ManagementIndexRoute: ManagementIndexRoute,
   TasksIndexRoute: TasksIndexRoute,
   TimeTrackingIndexRoute: TimeTrackingIndexRoute,
+  ManagementUsersUserIdRoute: ManagementUsersUserIdRoute,
   CalendarMeetingsIndexRoute: CalendarMeetingsIndexRoute,
+  ManagementUsersIndexRoute: ManagementUsersIndexRoute,
   TasksWeeklyIndexRoute: TasksWeeklyIndexRoute,
   TimeTrackingRequestsIndexRoute: TimeTrackingRequestsIndexRoute,
   TimeTrackingTimeoffIndexRoute: TimeTrackingTimeoffIndexRoute,
