@@ -1,6 +1,8 @@
 import { useAuthStore } from "../stores/authState"
 import { useNavigate } from "@tanstack/react-router"
 import {
+  CheckValidAccessTokenRequest,
+  CheckValidAccessTokenResponse,
   LogoutRequest,
   LogoutResponse,
   RefreshTokenRequest,
@@ -37,5 +39,15 @@ export const useAuth = () => {
     }
   }
 
-  return { refreshToken, logout }
+  const checkValidAccessToken = async (req: CheckValidAccessTokenRequest) => {
+    return callApi<CheckValidAccessTokenRequest, CheckValidAccessTokenResponse>(
+      {
+        method: "POST",
+        path: "/auth/validate",
+        data: req
+      }
+    )
+  }
+
+  return { refreshToken, logout, checkValidAccessToken }
 }

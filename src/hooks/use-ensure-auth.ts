@@ -9,15 +9,13 @@ export function useEnsureAuth(options?: { redirectTo?: string }) {
   const redirectTo = options?.redirectTo ?? "/"
   const navigate = useNavigate()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated())
-  const isTokenExpired = useAuthStore((s) => s.isTokenExpired())
-  const clearAuth = useAuthStore((s) => s.clearAuth)
 
   useEffect(() => {
-    if (!isAuthenticated || isTokenExpired) {
-      clearAuth()
+    if (!isAuthenticated) {
+      // Do not clear here; logout flow handles clearing
       navigate({ to: redirectTo, replace: true })
     }
-  }, [isAuthenticated, isTokenExpired, clearAuth, navigate, redirectTo])
+  }, [isAuthenticated, navigate, redirectTo])
 
-  return { isAuthenticated: !isTokenExpired && isAuthenticated }
+  return { isAuthenticated }
 }

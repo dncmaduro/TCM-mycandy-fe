@@ -181,3 +181,13 @@ export interface PublicSearchUsersResponse {
   data: IUser[]
   totalPages: number
 }
+
+/** @interface */
+export interface CheckValidAccessTokenRequest {
+  accessToken: string
+}
+
+/** @interface */
+export interface CheckValidAccessTokenResponse {
+  valid: boolean
+}

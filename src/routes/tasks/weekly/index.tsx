@@ -14,14 +14,23 @@ import {
   ActionIcon,
   Stack,
   Title,
-  Avatar
+  Avatar,
+  SegmentedControl,
+  Divider
 } from "@mantine/core"
-import { IconPlus, IconEye, IconTrash } from "@tabler/icons-react"
+import {
+  IconPlus,
+  IconEye,
+  IconTrash,
+  IconTable,
+  IconLayoutKanban
+} from "@tabler/icons-react"
 import { notifications } from "@mantine/notifications"
 import { modals } from "@mantine/modals"
 import { TaskDetail } from "../../../components/tasks/task-detail"
 import { TaskModal } from "../../../components/tasks/task-modal"
 import { TaskFilters } from "../../../components/tasks/task-filters"
+import { KanbanBoard } from "../../../components/tasks/kanban/KanbanBoard"
 import { CreateTaskRequest, SearchTasksParams } from "../../../types/models"
 import { useForm, FormProvider } from "react-hook-form"
 import { useUsers } from "../../../hooks/use-users"
@@ -310,45 +319,93 @@ function RouteComponent() {
     [usersMap]
   )
 
+  const viewMode = useMemo(() => {
+    return [
+      {
+        label: "Danh sách",
+        value: "list",
+        icon: IconTable
+      },
+      {
+        label: "Bảng Kanban",
+        value: "kanban",
+        icon: IconLayoutKanban
+      }
+    ]
+  }, [])
+
+  const [view, setView] = useState("list")
+
   return (
     <AppLayout>
       <Stack gap="md">
         <Group justify="space-between">
           <Title order={3}>Quản lý Task hàng tuần</Title>
-          <Button
-            leftSection={<IconPlus size={18} />}
-            onClick={openCreateModal}
-          >
-            Thêm Task
-          </Button>
+          <Group>
+            <Group gap={4}>
+              <Text size="sm">Chế độ xem</Text>
+              <SegmentedControl
+                data={viewMode}
+                value={view}
+                onChange={setView}
+                size="xs"
+              />
+            </Group>
+            <Divider orientation="vertical" />
+            <Button
+              leftSection={<IconPlus size={18} />}
+              onClick={openCreateModal}
+            >
+              Thêm Task
+            </Button>
+          </Group>
         </Group>
 
-        <DataTable<ITask, unknown>
-          columns={columns}
-          data={rows}
-          initialPageSize={pageSize}
-          pageSizeOptions={[10, 20, 50, 100]}
-          enableGlobalFilter={false}
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          onPageSizeChange={(newPageSize: number) => {
-            setPageSize(newPageSize)
-            setPage(1) // Reset về trang 1 khi thay đổi page size
-          }}
-          extraFilters={
+        {view === "list" ? (
+          <DataTable<ITask, unknown>
+            columns={columns}
+            data={rows}
+            initialPageSize={pageSize}
+            pageSizeOptions={[10, 20, 50, 100]}
+            enableGlobalFilter={false}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            onPageSizeChange={(newPageSize: number) => {
+              setPageSize(newPageSize)
+              setPage(1) // Reset về trang 1 khi thay đổi page size
+            }}
+            extraFilters={
+              <TaskFilters
+                onFiltersChange={handleFiltersChange}
+                users={usersList}
+                initialFilters={filters}
+              />
+            }
+            extraActions={
+              <Text c="dimmed" size="sm">
+                {isLoading ? "Đang tải..." : `${rows.length} task`}
+              </Text>
+            }
+          />
+        ) : (
+          <>
+            {/* Filters for Kanban view */}
             <TaskFilters
               onFiltersChange={handleFiltersChange}
               users={usersList}
               initialFilters={filters}
             />
-          }
-          extraActions={
-            <Text c="dimmed" size="sm">
-              {isLoading ? "Đang tải..." : `${rows.length} task`}
-            </Text>
-          }
-        />
+
+            {/* Kanban Board */}
+            <KanbanBoard
+              filters={filters}
+              usersMap={usersMap}
+              onViewTask={openDetailModal}
+              onDeleteTask={openDeleteConfirm}
+            />
+          </>
+        )}
       </Stack>
     </AppLayout>
   )
