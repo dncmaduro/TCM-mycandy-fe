@@ -3,44 +3,40 @@ import { useAuthStore } from "../stores/authState"
 import { useAuth } from "./use-auth"
 
 /**
- * Setup a one-shot timer to proactively refresh access token before it expires.
- * Place this hook high in the tree (e.g. root layout) so it runs once.
+ * Periodically checks token validity and refreshes if needed.
+ * Default interval: 30s.
  */
-export function useAuthAutoRefresh(preRefreshSeconds: number = 60) {
-  const expiresAt = useAuthStore((s) => s.expiresAt)
-  const refreshTokenValue = useAuthStore((s) => s.refreshToken)
-  const isTokenExpired = useAuthStore((s) => s.isTokenExpired())
-  const isRefreshExpired = useAuthStore((s) => s.isRefreshExpired())
-  const clearAuth = useAuthStore((s) => s.clearAuth)
+export function useAuthAutoRefresh(intervalSeconds: number = 30) {
   const setAuth = useAuthStore((s) => s.setAuth)
-  const { refreshToken } = useAuth()
+  const { refreshToken, checkValidAccessToken, logout } = useAuth()
 
-  const timeoutRef = useRef<number | null>(null)
+  const intervalRef = useRef<number | null>(null)
 
   useEffect(() => {
-    // cleanup previous timeout
-    if (timeoutRef.current) {
-      window.clearTimeout(timeoutRef.current)
-      timeoutRef.current = null
+    // cleanup previous interval
+    if (intervalRef.current) {
+      window.clearInterval(intervalRef.current)
+      intervalRef.current = null
     }
 
-    if (!expiresAt || !refreshTokenValue) return
-    if (isRefreshExpired) {
-      clearAuth()
-      return
-    }
+    const tick = async () => {
+      const state = useAuthStore.getState()
+      const accessToken = state.accessToken
+      const rt = state.refreshToken
 
-    const msUntilExpiry = expiresAt - Date.now()
-    const fireIn = msUntilExpiry - preRefreshSeconds * 1000
+      if (!accessToken || !rt) {
+        // Not authenticated; nothing to do
+        return
+      }
 
-    if (isTokenExpired) return
-
-    const delay = fireIn <= 0 ? 0 : fireIn
-
-    timeoutRef.current = window.setTimeout(async () => {
       try {
-        const resp = await refreshToken({ refreshToken: refreshTokenValue })
-        const data = resp.data
+        const resp = await checkValidAccessToken({ accessToken })
+        if (resp.data.valid) {
+          return
+        }
+        // invalid -> try refresh
+        const r = await refreshToken({ refreshToken: rt })
+        const data = r.data
         setAuth({
           accessToken: data.token,
           refreshToken: data.rt,
@@ -48,21 +44,17 @@ export function useAuthAutoRefresh(preRefreshSeconds: number = 60) {
           refreshExpiresIn: data.rtExp
         })
       } catch (e) {
-        clearAuth()
+        // If refresh fails or check fails -> logout
+        await logout()
       }
-    }, delay)
+    }
+
+    // First tick immediately, then on interval
+    tick()
+    intervalRef.current = window.setInterval(tick, intervalSeconds * 1000)
 
     return () => {
-      if (timeoutRef.current) window.clearTimeout(timeoutRef.current)
+      if (intervalRef.current) window.clearInterval(intervalRef.current)
     }
-  }, [
-    expiresAt,
-    refreshTokenValue,
-    isTokenExpired,
-    isRefreshExpired,
-    preRefreshSeconds,
-    clearAuth,
-    setAuth,
-    refreshToken
-  ])
+  }, [intervalSeconds, setAuth, refreshToken, checkValidAccessToken, logout])
 }
