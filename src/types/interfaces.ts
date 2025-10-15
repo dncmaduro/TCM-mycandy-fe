@@ -41,3 +41,12 @@ export interface ITask {
   deletedAt?: Date | null
   tags?: string[]
 }
+
+export interface ITaskTags {
+  _id: string
+  name: string
+  color: string
+  createdAt: string
+  updatedAt: string
+  deletedAt?: string
+}

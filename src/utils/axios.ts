@@ -15,7 +15,7 @@ async function tryRefresh(): Promise<string | null> {
   if (refreshingPromise) return refreshingPromise
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL
-  refreshingPromise = fetch(`${backendUrl}/auth/refresh-token`, {
+  refreshingPromise = fetch(`${backendUrl}/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ refreshToken: state.refreshToken })

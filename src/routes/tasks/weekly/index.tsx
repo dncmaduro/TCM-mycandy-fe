@@ -34,6 +34,8 @@ import { KanbanBoard } from "../../../components/tasks/kanban/KanbanBoard"
 import { CreateTaskRequest, SearchTasksParams } from "../../../types/models"
 import { useForm, FormProvider } from "react-hook-form"
 import { useUsers } from "../../../hooks/use-users"
+import { useTaskTags } from "../../../hooks/use-task-tags"
+import { TaskTagsDisplay } from "../../../components/tasks/TaskTagsDisplay"
 
 export const Route = createFileRoute("/tasks/weekly/")({
   component: RouteComponent
@@ -48,12 +50,26 @@ function RouteComponent() {
     Omit<SearchTasksParams, "page" | "limit">
   >({})
   const { publicSearchUsers } = useUsers()
+  const { searchTaskTags } = useTaskTags()
 
   const { data: usersData } = useQuery({
     queryKey: ["public-users"],
     queryFn: () => publicSearchUsers({ limit: 300, page: 1 }),
     staleTime: Infinity
   })
+
+  const { data: tagsData } = useQuery({
+    queryKey: ["active-task-tags"],
+    queryFn: async () => {
+      const resp = await searchTaskTags({ deleted: false, limit: 100, page: 1 })
+      return resp.data
+    },
+    staleTime: Infinity
+  })
+
+  const allTags = useMemo(() => {
+    return tagsData?.data ?? []
+  }, [tagsData])
 
   const usersMap = useMemo(() => {
     const list = usersData?.data?.data ?? []
@@ -294,6 +310,18 @@ function RouteComponent() {
         }
       },
       {
+        header: "Thẻ",
+        accessorKey: "tags",
+        cell: ({ row }) => {
+          return (
+            <TaskTagsDisplay
+              tagNames={row.original.tags || []}
+              maxVisible={2}
+            />
+          )
+        }
+      },
+      {
         header: "Thao tác",
         id: "actions",
         cell: ({ row }) => (
@@ -316,7 +344,7 @@ function RouteComponent() {
         )
       }
     ],
-    [usersMap]
+    [usersMap, allTags]
   )
 
   const viewMode = useMemo(() => {
