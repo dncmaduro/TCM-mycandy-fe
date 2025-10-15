@@ -2,7 +2,6 @@ import {
   Avatar,
   Button,
   Group,
-  MultiSelect,
   Select,
   SelectProps,
   Stack,
@@ -16,10 +15,12 @@ import { modals } from "@mantine/modals"
 import { Controller, useFormContext } from "react-hook-form"
 import { CreateTaskRequest } from "../../types/models"
 import { useUsers } from "../../hooks/use-users"
+import { useTaskTags } from "../../hooks/use-task-tags"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useMemo } from "react"
 import { IconCheck } from "@tabler/icons-react"
 import { ITask } from "../../types/interfaces"
+import { TagsCombobox } from "./TagsCombobox"
 
 interface TaskModalProps {
   task?: ITask
@@ -40,12 +41,26 @@ export const TaskModal = ({ task }: TaskModalProps) => {
     }
   }, [task])
   const { publicSearchUsers } = useUsers()
+  const { searchTaskTags } = useTaskTags()
 
   const { data: usersData } = useQuery({
     queryKey: ["public-users"],
     queryFn: () => publicSearchUsers({ limit: 300, page: 1 }),
     staleTime: Infinity
   })
+
+  const { data: tagsData } = useQuery({
+    queryKey: ["active-task-tags"],
+    queryFn: async () => {
+      const resp = await searchTaskTags({ deleted: false, limit: 100, page: 1 })
+      return resp.data
+    },
+    staleTime: Infinity
+  })
+
+  const activeTags = useMemo(() => {
+    return tagsData?.data ?? []
+  }, [tagsData])
 
   const usersOptions = useMemo(() => {
     return (
@@ -64,7 +79,7 @@ export const TaskModal = ({ task }: TaskModalProps) => {
         <Avatar src={user.avatarUrl} radius="xl" size={20} />
         <Stack gap={0}>
           <Text>{option.label}</Text>
-          <Text size="xs" color="dimmed">
+          <Text size="xs" c="dimmed">
             {user.email}
           </Text>
         </Stack>
@@ -191,15 +206,12 @@ export const TaskModal = ({ task }: TaskModalProps) => {
           name="tags"
           control={form.control}
           render={({ field }) => (
-            <MultiSelect
+            <TagsCombobox
               label="Phân loại"
-              placeholder="Chọn phân loại"
-              data={[
-                { value: "todo", label: "Chưa làm" },
-                { value: "doing", label: "Đang làm" },
-                { value: "done", label: "Đã làm" }
-              ]}
-              {...field}
+              placeholder="Chọn thẻ phân loại"
+              tags={activeTags}
+              value={field.value || []}
+              onChange={field.onChange}
             />
           )}
         />

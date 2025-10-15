@@ -4,7 +4,8 @@ import {
   IconClockHour4,
   IconHome2,
   IconDeviceDesktopCog,
-  IconUser
+  IconUser,
+  IconTags
 } from "@tabler/icons-react"
 import type { IconComponent } from "./SidebarItem"
 import type { Role } from "../../constants/role"
@@ -32,14 +33,20 @@ export const navItems: MenuItem[] = [
   {
     label: "Quản lý",
     to: "/management",
-    icon: IconDeviceDesktopCog
-    //allowedRoles: ["superadmin"]
+    icon: IconDeviceDesktopCog,
+    allowedRoles: ["superadmin"]
   }
 ]
 
 export const subMenus: Record<SectionKey, MenuItem[]> = {
   "/tasks": [
-    { label: "Nhiệm vụ trong tuần", to: "/tasks/weekly", icon: IconListCheck }
+    { label: "Nhiệm vụ trong tuần", to: "/tasks/weekly", icon: IconListCheck },
+    {
+      label: "Thẻ phân loại",
+      to: "/tasks/tags",
+      icon: IconTags,
+      allowedRoles: ["superadmin", "admin"]
+    }
   ],
   "/calendar": [
     { label: "Lịch họp", to: "/calendar/meetings", icon: IconCalendarEvent }
@@ -60,8 +67,8 @@ export const subMenus: Record<SectionKey, MenuItem[]> = {
     {
       label: "Người dùng",
       to: "/management/users",
-      icon: IconUser
-      //allowedRoles: ["superadmin"]
+      icon: IconUser,
+      allowedRoles: ["superadmin"]
     }
   ]
 }

@@ -11,6 +11,7 @@ import {
 } from "@mantine/core"
 import { IconEye, IconTrash, IconGripVertical } from "@tabler/icons-react"
 import type { ITask } from "../../../types/interfaces"
+import { TaskTagsDisplay } from "../TaskTagsDisplay"
 
 interface KanbanCardProps {
   task: ITask
@@ -97,18 +98,7 @@ export function KanbanCard({
 
         {/* Tags */}
         {task.tags && task.tags.length > 0 && (
-          <Group gap={4}>
-            {task.tags.slice(0, 3).map((tag, idx) => (
-              <Badge key={idx} size="xs" variant="dot" color="gray">
-                {tag}
-              </Badge>
-            ))}
-            {task.tags.length > 3 && (
-              <Text size="xs" c="dimmed">
-                +{task.tags.length - 3}
-              </Text>
-            )}
-          </Group>
+          <TaskTagsDisplay tagNames={task.tags} maxVisible={2} />
         )}
 
         {/* Footer */}

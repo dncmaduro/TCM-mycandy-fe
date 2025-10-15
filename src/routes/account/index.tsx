@@ -75,8 +75,6 @@ function RouteComponent() {
     )
   }
 
-  console.log("Account status:", status)
-
   if (!status) {
     message = (
       <Text size="sm" c="dimmed">

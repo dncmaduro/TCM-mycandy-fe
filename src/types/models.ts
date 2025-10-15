@@ -1,5 +1,5 @@
 import { Role } from "../constants/role"
-import { ITask, IUser, TaskPriority, TaskStatus } from "./interfaces"
+import { ITask, ITaskTags, IUser, TaskPriority, TaskStatus } from "./interfaces"
 
 /** @interface */
 export interface RefreshTokenRequest {
@@ -190,4 +190,60 @@ export interface CheckValidAccessTokenRequest {
 /** @interface */
 export interface CheckValidAccessTokenResponse {
   valid: boolean
+}
+
+/** @interface */
+export interface CreateTaskTagRequest {
+  name: string
+  color?: string
+}
+
+/** @interface */
+export interface CreateTaskTagResponse {
+  tag: ITaskTags
+}
+
+/** @interface */
+export interface UpdateTaskTagRequest {
+  name?: string
+  color?: string
+}
+
+/** @interface */
+export interface UpdateTaskTagResponse {
+  tag: ITaskTags
+}
+
+/** @interface */
+export interface DeleteTaskTagResponse {
+  deleted: boolean
+}
+
+/** @interface */
+export interface SearchTaskTagsParams {
+  searchText?: string
+  page?: number
+  limit?: number
+  deleted?: boolean
+}
+
+/** @interface */
+export interface SearchTaskTagsResponse {
+  data: ITaskTags[]
+  totalPages: number
+}
+
+/** @interface */
+export interface GetAllTaskTagsResponse {
+  data: ITaskTags[]
+}
+
+/** @interface */
+export interface RestoreTaskTagResponse {
+  tag: ITaskTags
+}
+
+/** @interface */
+export interface GetTaskTagResponse {
+  tag: ITaskTags | null
 }
