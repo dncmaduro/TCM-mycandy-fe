@@ -2,6 +2,8 @@ import { useAuthStore } from "../stores/authState"
 import {
   CreateTaskRequest,
   CreateTaskResponse,
+  GetAllUsersCurrentSprintStatsResponse,
+  GetMyCurrentSprintStatsResponse,
   GetSubtasksResponse,
   GetTaskResponse,
   SearchTasksParams,
@@ -73,6 +75,22 @@ export const useTasks = () => {
     })
   }
 
+  const getMyCurrentSprintStats = async () => {
+    return callApi<never, GetMyCurrentSprintStatsResponse>({
+      method: "GET",
+      path: `/tasks/stats/current-sprint/my`,
+      token: accessToken || undefined
+    })
+  }
+
+  const getAllUsersCurrentSprintStats = async () => {
+    return callApi<never, GetAllUsersCurrentSprintStatsResponse>({
+      method: "GET",
+      path: `/tasks/stats/current-sprint/all-users`,
+      token: accessToken || undefined
+    })
+  }
+
   return {
     createTask,
     updateTask,
@@ -80,6 +98,8 @@ export const useTasks = () => {
     assignTask,
     searchTasks,
     getSubTasks,
-    getTask
+    getTask,
+    getMyCurrentSprintStats,
+    getAllUsersCurrentSprintStats
   }
 }

@@ -6,7 +6,8 @@ import {
   IconDeviceDesktopCog,
   IconUser,
   IconTags,
-  IconCalendarRepeat
+  IconCalendarRepeat,
+  IconChartBar
 } from "@tabler/icons-react"
 import type { IconComponent } from "./SidebarItem"
 import type { Role } from "../../constants/role"
@@ -42,6 +43,12 @@ export const navItems: MenuItem[] = [
 export const subMenus: Record<SectionKey, MenuItem[]> = {
   "/tasks": [
     { label: "Nhiệm vụ trong tuần", to: "/tasks/weekly", icon: IconListCheck },
+    {
+      label: "Hiệu suất",
+      to: "/tasks/performance",
+      icon: IconChartBar,
+      allowedRoles: ["superadmin", "admin"]
+    },
     {
       label: "Thẻ phân loại",
       to: "/tasks/tags",
@@ -94,6 +101,11 @@ export function getVisibleSubMenu(
   section: SectionKey,
   role?: Role
 ): MenuItem[] {
+  console.log(
+    role,
+    subMenus[section],
+    subMenus[section]?.filter((i) => isAllowed(i, role))
+  )
   return (subMenus[section] ?? []).filter((i) => isAllowed(i, role))
 }
 

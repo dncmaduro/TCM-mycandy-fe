@@ -294,3 +294,45 @@ export interface GetSprintsResponse {
 export interface GetSprintResponse {
   sprint: ISprint | null
 }
+
+/** @interface */
+export interface GetMyCurrentSprintStatsResponse {
+  new: number
+  in_progress: number
+  reviewing: number
+  completed: number
+}
+
+/** @interface */
+export interface GetAllUsersCurrentSprintStatsResponse {
+  users: {
+    userId: string
+    new: number
+    in_progress: number
+    reviewing: number
+    completed: number
+  }[]
+}
+
+/** @interface */
+export interface SetCurrentSprintResponse {
+  message: string
+}
+
+/** @interface */
+export interface MoveTasksToSprintResponse {
+  message: string
+  movedTasks: number
+}
+
+/** @interface */
+export interface GetCurrentSprintResponse {
+  sprint: ISprint | null
+  taskStats: {
+    new: number
+    in_progress: number
+    reviewing: number
+    completed: number
+    total: number
+  }
+}

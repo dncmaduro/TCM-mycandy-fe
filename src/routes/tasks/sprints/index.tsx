@@ -21,12 +21,14 @@ import {
   IconPlus,
   IconEye,
   IconTrash,
-  IconRotateClockwise2
+  IconRotateClockwise2,
+  IconStar
 } from "@tabler/icons-react"
 import { notifications } from "@mantine/notifications"
 import { modals } from "@mantine/modals"
 import { AppLayout } from "../../../components/layouts/AppLayout"
 import { DateInput } from "@mantine/dates"
+import { Can } from "../../../components/common/Can"
 
 export const Route = createFileRoute("/tasks/sprints/")({
   component: RouteComponent
@@ -34,7 +36,13 @@ export const Route = createFileRoute("/tasks/sprints/")({
 
 function RouteComponent() {
   const qc = useQueryClient()
-  const { getSprints, createSprint, deleteSprint, restoreSprint } = useSprints()
+  const {
+    getSprints,
+    createSprint,
+    deleteSprint,
+    restoreSprint,
+    setCurrentSprint
+  } = useSprints()
 
   const [deletedFilter, setDeletedFilter] = useState<
     "all" | "active" | "deleted"
@@ -113,6 +121,25 @@ function RouteComponent() {
       notifications.show({
         title: "Lỗi",
         message: error.message || "Không thể khôi phục sprint",
+        color: "red"
+      })
+    }
+  })
+
+  const { mutate: handleSetCurrent } = useMutation({
+    mutationFn: (id: string) => setCurrentSprint(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["sprints"] })
+      notifications.show({
+        title: "Thành công",
+        message: "Đã đặt làm sprint hiện tại",
+        color: "green"
+      })
+    },
+    onError: (error: any) => {
+      notifications.show({
+        title: "Lỗi",
+        message: error.message || "Không thể đặt làm sprint hiện tại",
         color: "red"
       })
     }
@@ -304,6 +331,19 @@ function RouteComponent() {
     })
   }
 
+  const openSetCurrentConfirm = (sprint: ISprint) => {
+    modals.openConfirmModal({
+      title: "Đặt làm Sprint hiện tại",
+      children: (
+        <Text size="sm">
+          Đặt <b>{sprint.name}</b> làm sprint hiện tại?
+        </Text>
+      ),
+      labels: { confirm: "Đặt làm hiện tại", cancel: "Hủy" },
+      onConfirm: () => handleSetCurrent(sprint._id)
+    })
+  }
+
   const columns = useMemo<ColumnDef<ISprint, unknown>[]>(
     () => [
       {
@@ -366,6 +406,18 @@ function RouteComponent() {
                   >
                     <IconEye size={18} />
                   </ActionIcon>
+                  {row.original.isCurrent ? null : (
+                    <Can roles="superadmin">
+                      <ActionIcon
+                        variant="subtle"
+                        color="yellow"
+                        onClick={() => openSetCurrentConfirm(row.original)}
+                        title="Đặt làm Sprint hiện tại"
+                      >
+                        <IconStar size={18} />
+                      </ActionIcon>
+                    </Can>
+                  )}
                   <ActionIcon
                     variant="subtle"
                     color="red"

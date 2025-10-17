@@ -16,14 +16,19 @@ import {
   Title,
   Avatar,
   SegmentedControl,
-  Divider
+  Divider,
+  Alert,
+  Paper,
+  Select
 } from "@mantine/core"
 import {
   IconPlus,
   IconEye,
   IconTrash,
   IconTable,
-  IconLayoutKanban
+  IconLayoutKanban,
+  IconArrowRight,
+  IconInfoCircle
 } from "@tabler/icons-react"
 import { notifications } from "@mantine/notifications"
 import { modals } from "@mantine/modals"
@@ -37,13 +42,168 @@ import { useUsers } from "../../../hooks/use-users"
 import { useTaskTags } from "../../../hooks/use-task-tags"
 import { TaskTagsDisplay } from "../../../components/tasks/TaskTagsDisplay"
 import { useSprints } from "../../../hooks/use-sprints"
+import { Can } from "../../../components/common/Can"
 
 export const Route = createFileRoute("/tasks/weekly/")({
   component: RouteComponent
 })
 
+interface MoveToNewSprintModalProps {
+  onClose: () => void
+}
+
+function MoveToNewSprintModal({ onClose }: MoveToNewSprintModalProps) {
+  const { getCurrentSprint, getSprints, moveTasksToSprint } = useSprints()
+  const qc = useQueryClient()
+  const [selectedSprintId, setSelectedSprintId] = useState<string>("")
+
+  const { data: currentSprintData, isLoading: currentSprintLoading } = useQuery(
+    {
+      queryKey: ["current-sprint"],
+      queryFn: getCurrentSprint,
+      staleTime: 60000
+    }
+  )
+
+  const { data: sprintsData } = useQuery({
+    queryKey: ["available-sprints"],
+    queryFn: async () => {
+      const resp = await getSprints({ limit: 50 })
+      return resp.data
+    },
+    staleTime: 60000
+  })
+
+  const { mutate: handleMoveToSprint, isPending: isMoving } = useMutation({
+    mutationFn: (sprintId: string) => moveTasksToSprint(sprintId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks-weekly"] })
+      qc.invalidateQueries({ queryKey: ["current-sprint"] })
+      notifications.show({
+        title: "Thành công",
+        message: "Đã chuyển các task sang sprint mới",
+        color: "green"
+      })
+      onClose()
+    },
+    onError: (error: any) => {
+      notifications.show({
+        title: "Lỗi",
+        message: error.message || "Không thể chuyển sprint",
+        color: "red"
+      })
+    }
+  })
+
+  const currentSprint = currentSprintData?.data?.sprint
+  const currentStats = currentSprintData?.data?.taskStats
+
+  const availableSprints =
+    sprintsData?.data?.filter(
+      (s) => !s.deletedAt && s._id !== currentSprint?._id
+    ) || []
+
+  if (currentSprintLoading) {
+    return (
+      <Stack align="center" py="xl">
+        <Text>Đang tải thông tin sprint hiện tại...</Text>
+      </Stack>
+    )
+  }
+
+  return (
+    <Stack gap="md">
+      <Alert icon={<IconInfoCircle />} color="blue" variant="light">
+        <Text size="sm">
+          <strong>Lưu ý:</strong> Các task có trạng thái "Mới", "Đang làm" và
+          "Đang review" sẽ được chuyển sang sprint mới. Các task "Hoàn thành",
+          "Hủy" và "Lưu trữ" sẽ giữ nguyên.
+        </Text>
+      </Alert>
+
+      {currentSprint && currentStats && (
+        <Paper withBorder p="md" radius="md">
+          <Title order={4} mb="sm">
+            Sprint hiện tại: {currentSprint.name}
+          </Title>
+          <Group grow>
+            <div>
+              <Text size="sm" c="dimmed">
+                Mới
+              </Text>
+              <Badge variant="light" color="blue" size="lg">
+                {currentStats.new}
+              </Badge>
+            </div>
+            <div>
+              <Text size="sm" c="dimmed">
+                Đang làm
+              </Text>
+              <Badge variant="light" color="yellow" size="lg">
+                {currentStats.in_progress}
+              </Badge>
+            </div>
+            <div>
+              <Text size="sm" c="dimmed">
+                Đang review
+              </Text>
+              <Badge variant="light" color="orange" size="lg">
+                {currentStats.reviewing}
+              </Badge>
+            </div>
+            <div>
+              <Text size="sm" c="dimmed">
+                Hoàn thành
+              </Text>
+              <Badge variant="light" color="teal" size="lg">
+                {currentStats.completed}
+              </Badge>
+            </div>
+            <div>
+              <Text size="sm" c="dimmed">
+                Tổng cộng
+              </Text>
+              <Badge variant="filled" color="gray" size="lg">
+                {currentStats.total}
+              </Badge>
+            </div>
+          </Group>
+        </Paper>
+      )}
+
+      <Select
+        label="Chọn Sprint mới"
+        placeholder="Chọn sprint để chuyển đến"
+        data={availableSprints.map((sprint) => ({
+          value: sprint._id,
+          label: sprint.name
+        }))}
+        value={selectedSprintId}
+        onChange={(value) => setSelectedSprintId(value || "")}
+        required
+        searchable
+      />
+
+      <Group justify="flex-end" mt="md">
+        <Button variant="subtle" onClick={onClose}>
+          Hủy
+        </Button>
+        <Button
+          onClick={() => handleMoveToSprint(selectedSprintId)}
+          disabled={!selectedSprintId || isMoving}
+          loading={isMoving}
+          leftSection={<IconArrowRight size={16} />}
+        >
+          Chuyển Sprint
+        </Button>
+      </Group>
+    </Stack>
+  )
+}
+
 function RouteComponent() {
   const { searchTasks, deleteTask, createTask } = useTasks()
+  const { getSprints } = useSprints()
   const qc = useQueryClient()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -52,7 +212,6 @@ function RouteComponent() {
   >({})
   const { publicSearchUsers } = useUsers()
   const { searchTaskTags } = useTaskTags()
-  const { getSprints } = useSprints()
 
   const { data: usersData } = useQuery({
     queryKey: ["public-users"],
@@ -238,6 +397,14 @@ function RouteComponent() {
     })
   }
 
+  const openMoveToNewSprintModal = () => {
+    modals.open({
+      title: <b>Chuyển sang Sprint mới</b>,
+      size: "xl",
+      children: <MoveToNewSprintModal onClose={() => modals.closeAll()} />
+    })
+  }
+
   const rows = data?.data ?? []
   const totalPages = data?.totalPages ?? 1
 
@@ -418,6 +585,16 @@ function RouteComponent() {
               />
             </Group>
             <Divider orientation="vertical" />
+            <Can roles={["superadmin", "admin"]}>
+              <Button
+                variant="light"
+                color="indigo"
+                leftSection={<IconArrowRight size={18} />}
+                onClick={openMoveToNewSprintModal}
+              >
+                Chuyển Sprint
+              </Button>
+            </Can>
             <Button
               leftSection={<IconPlus size={18} />}
               onClick={openCreateModal}

@@ -1,7 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useAuthStore } from "../../stores/authState"
 import { useEffect } from "react"
 import { getFirstSubMenuPath } from "../../components/navigation/menuConfig"
+import { AppLayout } from "../../components/layouts/AppLayout"
+import { useRoles } from "../../hooks/use-roles"
+import { useQuery } from "@tanstack/react-query"
+import { Role } from "../../constants/role"
 
 export const Route = createFileRoute("/management/")({
   component: RouteComponent
@@ -9,10 +12,16 @@ export const Route = createFileRoute("/management/")({
 
 function RouteComponent() {
   const navigate = useNavigate()
-  const role = (useAuthStore((s) => s.user) as any)?.role
+  const { getOwnRole } = useRoles()
+  const { data: role } = useQuery({
+    queryKey: ["own-role"],
+    queryFn: getOwnRole,
+    staleTime: Infinity,
+    select: (data) => data.data.role
+  })
   useEffect(() => {
-    const first = getFirstSubMenuPath("/management", role)
-    if (first) navigate({ to: first })
+    const first = getFirstSubMenuPath("/management", role as Role)
+    if (first) navigate({ to: first, replace: true })
   }, [navigate, role])
-  return <div>Hello "/management/"!</div>
+  return <AppLayout />
 }
