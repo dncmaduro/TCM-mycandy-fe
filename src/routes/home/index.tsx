@@ -23,6 +23,8 @@ import {
 } from "@tabler/icons-react"
 import type { ElementType } from "react"
 import { useAuthStore } from "../../stores/authState"
+import { useTasks } from "../../hooks/use-tasks"
+import { useQuery } from "@tanstack/react-query"
 
 export const Route = createFileRoute("/home/")({
   component: RouteComponent
@@ -58,6 +60,25 @@ function StatCard({
 
 function RouteComponent() {
   const user = useAuthStore((s) => s.user)
+  const { getMyCurrentSprintStats } = useTasks()
+
+  const { data: statsData } = useQuery({
+    queryKey: ["my-current-sprint-stats"],
+    queryFn: getMyCurrentSprintStats,
+    staleTime: 60000 // 1 minute
+  })
+
+  const stats = statsData?.data || {
+    new: 0,
+    in_progress: 0,
+    reviewing: 0,
+    completed: 0
+  }
+
+  const totalTasks =
+    stats.new + stats.in_progress + stats.reviewing + stats.completed
+  const completedPercentage =
+    totalTasks > 0 ? Math.round((stats.completed / totalTasks) * 100) : 0
 
   const tasks = [
     { title: "Thiết kế UI trang login", progress: 85, status: "Đang làm" },
@@ -83,36 +104,73 @@ function RouteComponent() {
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
             <StatCard
               icon={IconListCheck}
-              label="Nhiệm vụ hôm nay"
-              value="8"
+              label="Tổng task sprint"
+              value={totalTasks.toString()}
               color="indigo"
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
             <StatCard
-              icon={IconAlertCircle}
-              label="Quá hạn"
-              value="2"
-              color="red"
+              icon={IconClockHour4}
+              label="Đang làm"
+              value={stats.in_progress.toString()}
+              color="yellow"
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
             <StatCard
-              icon={IconCalendarEvent}
-              label="Họp hôm nay"
-              value="3"
+              icon={IconAlertCircle}
+              label="Đang review"
+              value={stats.reviewing.toString()}
+              color="orange"
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+            <StatCard
+              icon={IconCheck}
+              label="Hoàn thành"
+              value={stats.completed.toString()}
               color="teal"
             />
           </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            <StatCard
-              icon={IconClockHour4}
-              label="Giờ tuần này"
-              value="24.5h"
-              color="grape"
-            />
-          </Grid.Col>
         </Grid>
+
+        {/* Performance Progress */}
+        <Paper withBorder p="md" radius="md">
+          <Group justify="space-between" align="center" mb="sm">
+            <div>
+              <Title order={4}>Hiệu suất sprint hiện tại</Title>
+              <Text size="sm" c="dimmed">
+                {stats.completed}/{totalTasks} tasks hoàn thành
+              </Text>
+            </div>
+            <Badge
+              size="lg"
+              variant="light"
+              color={
+                completedPercentage >= 70
+                  ? "teal"
+                  : completedPercentage >= 40
+                    ? "yellow"
+                    : "red"
+              }
+            >
+              {completedPercentage}%
+            </Badge>
+          </Group>
+          <Progress
+            value={completedPercentage}
+            color={
+              completedPercentage >= 70
+                ? "teal"
+                : completedPercentage >= 40
+                  ? "yellow"
+                  : "red"
+            }
+            size="lg"
+            radius="xl"
+          />
+        </Paper>
 
         <Grid>
           <Grid.Col span={{ base: 12, md: 7 }}>

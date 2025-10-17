@@ -2,7 +2,9 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { AppLayout } from "../../components/layouts/AppLayout"
 import { useEffect } from "react"
 import { getFirstSubMenuPath } from "../../components/navigation/menuConfig"
-import { useAuthStore } from "../../stores/authState"
+import { useRoles } from "../../hooks/use-roles"
+import { useQuery } from "@tanstack/react-query"
+import { Role } from "../../constants/role"
 
 export const Route = createFileRoute("/calendar/")({
   component: RouteComponent
@@ -10,9 +12,15 @@ export const Route = createFileRoute("/calendar/")({
 
 function RouteComponent() {
   const navigate = useNavigate()
-  const role = (useAuthStore((s) => s.user) as any)?.role
+  const { getOwnRole } = useRoles()
+  const { data: role } = useQuery({
+    queryKey: ["own-role"],
+    queryFn: getOwnRole,
+    staleTime: Infinity,
+    select: (data) => data.data.role
+  })
   useEffect(() => {
-    const first = getFirstSubMenuPath("/calendar", role)
+    const first = getFirstSubMenuPath("/calendar", role as Role)
     if (first) navigate({ to: first })
   }, [navigate, role])
   return <AppLayout />

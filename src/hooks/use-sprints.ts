@@ -3,10 +3,13 @@ import {
   CreateSprintRequest,
   CreateSprintResponse,
   DeleteSprintResponse,
+  GetCurrentSprintResponse,
   GetSprintResponse,
   GetSprintsParams,
   GetSprintsResponse,
-  RestoreSprintResponse
+  MoveTasksToSprintResponse,
+  RestoreSprintResponse,
+  SetCurrentSprintResponse
 } from "../types/models"
 import { callApi } from "../utils/axios"
 
@@ -55,11 +58,38 @@ export const useSprints = () => {
     })
   }
 
+  const setCurrentSprint = (sprintId: string) => {
+    return callApi<never, SetCurrentSprintResponse>({
+      method: "PATCH",
+      path: `/sprints/${sprintId}/set-current`,
+      token: accessToken || undefined
+    })
+  }
+
+  const moveTasksToSprint = (sprintId: string) => {
+    return callApi<never, MoveTasksToSprintResponse>({
+      method: "POST",
+      path: `/sprints/${sprintId}/move-tasks-and-set-current`,
+      token: accessToken || undefined
+    })
+  }
+
+  const getCurrentSprint = () => {
+    return callApi<never, GetCurrentSprintResponse>({
+      method: "GET",
+      path: `/sprints/current`,
+      token: accessToken || undefined
+    })
+  }
+
   return {
     createSprint,
     deleteSprint,
     getSprints,
     getSprint,
-    restoreSprint
+    restoreSprint,
+    setCurrentSprint,
+    moveTasksToSprint,
+    getCurrentSprint
   }
 }
