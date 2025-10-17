@@ -36,6 +36,7 @@ import { useForm, FormProvider } from "react-hook-form"
 import { useUsers } from "../../../hooks/use-users"
 import { useTaskTags } from "../../../hooks/use-task-tags"
 import { TaskTagsDisplay } from "../../../components/tasks/TaskTagsDisplay"
+import { useSprints } from "../../../hooks/use-sprints"
 
 export const Route = createFileRoute("/tasks/weekly/")({
   component: RouteComponent
@@ -51,6 +52,7 @@ function RouteComponent() {
   >({})
   const { publicSearchUsers } = useUsers()
   const { searchTaskTags } = useTaskTags()
+  const { getSprints } = useSprints()
 
   const { data: usersData } = useQuery({
     queryKey: ["public-users"],
@@ -67,9 +69,25 @@ function RouteComponent() {
     staleTime: Infinity
   })
 
+  const { data: sprintsData } = useQuery({
+    queryKey: ["sprints-list"],
+    queryFn: async () => {
+      const resp = await getSprints({ limit: 100 })
+      return resp.data
+    },
+    staleTime: Infinity
+  })
+
   const allTags = useMemo(() => {
     return tagsData?.data ?? []
   }, [tagsData])
+
+  const sprintsMap = useMemo(() => {
+    const list = sprintsData?.data ?? []
+    return new Map<string, { _id: string; name: string }>(
+      list.filter((s) => !s.deletedAt).map((s) => [s._id, s])
+    )
+  }, [sprintsData])
 
   const usersMap = useMemo(() => {
     const list = usersData?.data?.data ?? []
@@ -81,6 +99,10 @@ function RouteComponent() {
   const usersList = useMemo(() => {
     return usersData?.data?.data ?? []
   }, [usersData])
+
+  const sprintsList = useMemo(() => {
+    return (sprintsData?.data ?? []).filter((s) => !s.deletedAt)
+  }, [sprintsData])
 
   const handleFiltersChange = (
     newFilters: Omit<SearchTasksParams, "page" | "limit">
@@ -155,7 +177,8 @@ function RouteComponent() {
       priority: "medium" as TaskPriority,
       dueDate: undefined,
       assignedTo: "",
-      tags: []
+      tags: [],
+      sprint: ""
     }
   })
 
@@ -168,7 +191,8 @@ function RouteComponent() {
           priority: values.priority,
           dueDate: values.dueDate ? new Date(values.dueDate) : undefined,
           assignedTo: values.assignedTo || undefined,
-          tags: values.tags
+          tags: values.tags,
+          sprint: values.sprint
         }
         handleCreate(payload)
         qc.invalidateQueries({ queryKey: ["tasks-weekly"] })
@@ -217,7 +241,7 @@ function RouteComponent() {
   const rows = data?.data ?? []
   const totalPages = data?.totalPages ?? 1
 
-  const columns = useMemo<ColumnDef<ITask, unknown>[]>(
+  const columns = useMemo<ColumnDef<ITask>[]>(
     () => [
       {
         header: "Tiêu đề",
@@ -236,6 +260,20 @@ function RouteComponent() {
                 </Text>
               )}
             </div>
+          )
+        }
+      },
+      {
+        header: "Chu kì",
+        accessorKey: "sprint",
+        cell: ({ row }) => {
+          const sprintName = sprintsMap.get(row.original.sprint)?.name
+          return sprintName ? (
+            <Text size="sm">{sprintName}</Text>
+          ) : (
+            <Text size="sm" c="dimmed">
+              -
+            </Text>
           )
         }
       },
@@ -344,7 +382,7 @@ function RouteComponent() {
         )
       }
     ],
-    [usersMap, allTags]
+    [usersMap, allTags, sprintsMap]
   )
 
   const viewMode = useMemo(() => {
@@ -362,7 +400,7 @@ function RouteComponent() {
     ]
   }, [])
 
-  const [view, setView] = useState("list")
+  const [view, setView] = useState<"list" | "kanban">("list")
 
   return (
     <AppLayout>
@@ -375,7 +413,7 @@ function RouteComponent() {
               <SegmentedControl
                 data={viewMode}
                 value={view}
-                onChange={setView}
+                onChange={(val) => setView(val as "list" | "kanban")}
                 size="xs"
               />
             </Group>
@@ -407,7 +445,9 @@ function RouteComponent() {
               <TaskFilters
                 onFiltersChange={handleFiltersChange}
                 users={usersList}
+                sprints={sprintsList}
                 initialFilters={filters}
+                view={view}
               />
             }
             extraActions={
@@ -422,13 +462,16 @@ function RouteComponent() {
             <TaskFilters
               onFiltersChange={handleFiltersChange}
               users={usersList}
+              sprints={sprintsList}
               initialFilters={filters}
+              view={view}
             />
 
             {/* Kanban Board */}
             <KanbanBoard
               filters={filters}
               usersMap={usersMap}
+              sprintsMap={sprintsMap}
               onViewTask={openDetailModal}
               onDeleteTask={openDeleteConfirm}
             />

@@ -16,6 +16,7 @@ import { Controller, useFormContext } from "react-hook-form"
 import { CreateTaskRequest } from "../../types/models"
 import { useUsers } from "../../hooks/use-users"
 import { useTaskTags } from "../../hooks/use-task-tags"
+import { useSprints } from "../../hooks/use-sprints"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useMemo } from "react"
 import { IconCheck } from "@tabler/icons-react"
@@ -36,12 +37,14 @@ export const TaskModal = ({ task }: TaskModalProps) => {
         priority: task.priority,
         dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
         assignedTo: task.assignedTo || undefined,
-        tags: task.tags || []
+        tags: task.tags || [],
+        sprint: task.sprint || ""
       })
     }
   }, [task])
   const { publicSearchUsers } = useUsers()
   const { searchTaskTags } = useTaskTags()
+  const { getSprints } = useSprints()
 
   const { data: usersData } = useQuery({
     queryKey: ["public-users"],
@@ -58,9 +61,29 @@ export const TaskModal = ({ task }: TaskModalProps) => {
     staleTime: Infinity
   })
 
+  const { data: sprintsData } = useQuery({
+    queryKey: ["sprints-select"],
+    queryFn: async () => {
+      const resp = await getSprints({ limit: 50 })
+      return resp.data
+    },
+    staleTime: Infinity
+  })
+
   const activeTags = useMemo(() => {
     return tagsData?.data ?? []
   }, [tagsData])
+
+  const sprintsOptions = useMemo(() => {
+    return (
+      sprintsData?.data
+        .filter((sprint) => !sprint.deletedAt)
+        .map((sprint) => ({
+          value: sprint._id,
+          label: sprint.name
+        })) || []
+    )
+  }, [sprintsData])
 
   const usersOptions = useMemo(() => {
     return (
@@ -195,6 +218,23 @@ export const TaskModal = ({ task }: TaskModalProps) => {
               data={usersOptions}
               {...field}
               renderOption={renderOption}
+              searchable
+              clearable
+              required
+            />
+          )}
+        />
+
+        <Controller
+          name="sprint"
+          control={form.control}
+          rules={{ required: "Chu kì là bắt buộc" }}
+          render={({ field }) => (
+            <Select
+              label="Chu kì"
+              placeholder="Chọn chu kì"
+              data={sprintsOptions}
+              {...field}
               searchable
               clearable
               required

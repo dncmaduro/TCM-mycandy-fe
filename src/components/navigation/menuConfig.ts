@@ -5,7 +5,8 @@ import {
   IconHome2,
   IconDeviceDesktopCog,
   IconUser,
-  IconTags
+  IconTags,
+  IconCalendarRepeat
 } from "@tabler/icons-react"
 import type { IconComponent } from "./SidebarItem"
 import type { Role } from "../../constants/role"
@@ -45,6 +46,12 @@ export const subMenus: Record<SectionKey, MenuItem[]> = {
       label: "Thẻ phân loại",
       to: "/tasks/tags",
       icon: IconTags,
+      allowedRoles: ["superadmin", "admin"]
+    },
+    {
+      label: "Chu kì",
+      to: "/tasks/sprints",
+      icon: IconCalendarRepeat,
       allowedRoles: ["superadmin", "admin"]
     }
   ],

@@ -1,5 +1,12 @@
 import { Role } from "../constants/role"
-import { ITask, ITaskTags, IUser, TaskPriority, TaskStatus } from "./interfaces"
+import {
+  ISprint,
+  ITask,
+  ITaskTags,
+  IUser,
+  TaskPriority,
+  TaskStatus
+} from "./interfaces"
 
 /** @interface */
 export interface RefreshTokenRequest {
@@ -95,6 +102,7 @@ export interface GetOwnRoleResponse {
 /** @interface */
 export interface CreateTaskRequest {
   title: string
+  sprint: string
   description?: string
   parentTaskId?: string
   priority?: TaskPriority
@@ -111,6 +119,7 @@ export interface CreateTaskResponse {
 /** @interface */
 export interface UpdateTaskRequest {
   title?: string
+  sprint?: string
   description?: string
   status?: TaskStatus
   priority?: TaskPriority
@@ -142,6 +151,7 @@ export interface AssignTaskResponse {
 /** @interface */
 export interface SearchTasksParams {
   searchText?: string
+  sprint?: string
   createdBy?: string
   assignedTo?: string
   status?: TaskStatus
@@ -246,4 +256,41 @@ export interface RestoreTaskTagResponse {
 /** @interface */
 export interface GetTaskTagResponse {
   tag: ITaskTags | null
+}
+
+/** @interface */
+export interface CreateSprintRequest {
+  name: string
+  startDate: Date
+  endDate: Date
+}
+
+/** @interface */
+export interface CreateSprintResponse {
+  sprint: ISprint
+}
+
+/** @interface */
+export interface DeleteSprintResponse {
+  message: string
+}
+
+/** @interface */
+export interface RestoreSprintResponse {
+  message: string
+}
+
+/** @interface */
+export interface GetSprintsParams {
+  limit?: number
+}
+
+/** @interface */
+export interface GetSprintsResponse {
+  data: ISprint[]
+}
+
+/** @interface */
+export interface GetSprintResponse {
+  sprint: ISprint | null
 }

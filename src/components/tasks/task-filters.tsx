@@ -19,13 +19,17 @@ import type { SearchTasksParams } from "../../types/models"
 export interface TaskFiltersProps {
   onFiltersChange: (filters: Omit<SearchTasksParams, "page" | "limit">) => void
   users: Array<{ _id: string; name: string }>
+  sprints?: Array<{ _id: string; name: string }>
   initialFilters?: Omit<SearchTasksParams, "page" | "limit">
+  view: "kanban" | "list"
 }
 
 export function TaskFilters({
   onFiltersChange,
   users,
-  initialFilters = {}
+  sprints = [],
+  initialFilters = {},
+  view
 }: TaskFiltersProps) {
   const [opened, setOpened] = useState(false)
   const [filters, setFilters] =
@@ -50,6 +54,11 @@ export function TaskFilters({
   const userOptions = users.map((user) => ({
     value: user._id,
     label: user.name
+  }))
+
+  const sprintOptions = sprints.map((sprint) => ({
+    value: sprint._id,
+    label: sprint.name
   }))
 
   const updateFilter = (key: keyof typeof filters, value: any) => {
@@ -145,14 +154,18 @@ export function TaskFilters({
             />
 
             {/* Status */}
-            <Select
-              label="Trạng thái"
-              placeholder="Chọn trạng thái"
-              data={statusOptions}
-              value={filters.status || null}
-              onChange={(value) => updateFilter("status", value as TaskStatus)}
-              clearable
-            />
+            {view === "list" && (
+              <Select
+                label="Trạng thái"
+                placeholder="Chọn trạng thái"
+                data={statusOptions}
+                value={filters.status || null}
+                onChange={(value) =>
+                  updateFilter("status", value as TaskStatus)
+                }
+                clearable
+              />
+            )}
 
             {/* Priority */}
             <Select
@@ -164,6 +177,17 @@ export function TaskFilters({
                 updateFilter("priority", value as TaskPriority)
               }
               clearable
+            />
+
+            {/* Sprint */}
+            <Select
+              label="Chu kì"
+              placeholder="Chọn chu kì"
+              data={sprintOptions}
+              value={filters.sprint || null}
+              onChange={(value) => updateFilter("sprint", value)}
+              clearable
+              searchable
             />
 
             {/* Due Date Range */}
@@ -279,6 +303,25 @@ export function TaskFilters({
             >
               Ưu tiên:{" "}
               {priorityOptions.find((p) => p.value === filters.priority)?.label}
+            </Badge>
+          )}
+
+          {filters.sprint && (
+            <Badge
+              variant="outline"
+              rightSection={
+                <ActionIcon
+                  size="xs"
+                  color="blue"
+                  radius="xl"
+                  variant="transparent"
+                  onClick={() => clearFilter("sprint")}
+                >
+                  <IconX size={10} />
+                </ActionIcon>
+              }
+            >
+              Chu kì: {sprints.find((s) => s._id === filters.sprint)?.name}
             </Badge>
           )}
 
