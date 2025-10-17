@@ -29,7 +29,7 @@ export type MenuItem = {
 
 export const navItems: MenuItem[] = [
   { label: "Tổng quan", to: "/home", icon: IconHome2 },
-  { label: "Nhiệm vụ", to: "/tasks", icon: IconListCheck },
+  { label: "Task", to: "/tasks", icon: IconListCheck },
   { label: "Lịch", to: "/calendar", icon: IconCalendarEvent },
   { label: "Thời gian làm việc", to: "/time-tracking", icon: IconClockHour4 },
   {
@@ -42,7 +42,7 @@ export const navItems: MenuItem[] = [
 
 export const subMenus: Record<SectionKey, MenuItem[]> = {
   "/tasks": [
-    { label: "Nhiệm vụ trong tuần", to: "/tasks/weekly", icon: IconListCheck },
+    { label: "Task trong tuần", to: "/tasks/weekly", icon: IconListCheck },
     {
       label: "Hiệu suất",
       to: "/tasks/performance",
@@ -56,7 +56,7 @@ export const subMenus: Record<SectionKey, MenuItem[]> = {
       allowedRoles: ["superadmin", "admin"]
     },
     {
-      label: "Chu kì",
+      label: "Sprint",
       to: "/tasks/sprints",
       icon: IconCalendarRepeat,
       allowedRoles: ["superadmin", "admin"]

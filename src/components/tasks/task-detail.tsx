@@ -220,7 +220,7 @@ export const TaskDetail = ({ task }: TaskDetailProps) => {
       {task.sprint && (
         <div>
           <Text size="sm" fw={600} c="dimmed" mb={4}>
-            Chu kì
+            Sprint
           </Text>
           <Badge variant="dot" color="violet" size="lg">
             {sprintData?.data.sprint?.name || task.sprint}

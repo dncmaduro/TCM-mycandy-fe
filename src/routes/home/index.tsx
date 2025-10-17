@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { AppLayout } from "../../components/layouts/AppLayout"
 import {
   Title,
@@ -21,10 +21,11 @@ import {
   IconChevronRight,
   IconCheck
 } from "@tabler/icons-react"
-import type { ElementType } from "react"
+import { useMemo, type ElementType } from "react"
 import { useAuthStore } from "../../stores/authState"
 import { useTasks } from "../../hooks/use-tasks"
 import { useQuery } from "@tanstack/react-query"
+import { useUsers } from "../../hooks/use-users"
 
 export const Route = createFileRoute("/home/")({
   component: RouteComponent
@@ -60,12 +61,60 @@ function StatCard({
 
 function RouteComponent() {
   const user = useAuthStore((s) => s.user)
-  const { getMyCurrentSprintStats } = useTasks()
-
+  const { getMe } = useUsers()
+  const { data: meData } = useQuery({
+    queryKey: ["me"],
+    queryFn: getMe,
+    staleTime: Infinity,
+    select: (data) => data.data.user
+  })
+  const { getMyCurrentSprintStats, searchTasks } = useTasks()
   const { data: statsData } = useQuery({
     queryKey: ["my-current-sprint-stats"],
     queryFn: getMyCurrentSprintStats,
     staleTime: 60000 // 1 minute
+  })
+
+  const { data: inProgressTasks } = useQuery({
+    queryKey: ["my-in-progress-tasks"],
+    queryFn: () =>
+      searchTasks({
+        status: "in_progress",
+        limit: 3,
+        page: 1,
+        assignedTo: meData?._id
+      }),
+    staleTime: 60000,
+    select: (data) => data.data.data,
+    enabled: !!meData
+  })
+
+  const { data: reviewingTasks } = useQuery({
+    queryKey: ["my-reviewing-tasks"],
+    queryFn: () =>
+      searchTasks({
+        status: "reviewing",
+        limit: 3,
+        page: 1,
+        assignedTo: meData?._id
+      }),
+    staleTime: 60000,
+    select: (data) => data.data.data,
+    enabled: !!meData
+  })
+
+  const { data: newTasks } = useQuery({
+    queryKey: ["my-new-tasks"],
+    queryFn: () =>
+      searchTasks({
+        status: "new",
+        limit: 3,
+        page: 1,
+        assignedTo: meData?._id
+      }),
+    staleTime: 60000,
+    select: (data) => data.data.data,
+    enabled: !!meData
   })
 
   const stats = statsData?.data || {
@@ -80,11 +129,36 @@ function RouteComponent() {
   const completedPercentage =
     totalTasks > 0 ? Math.round((stats.completed / totalTasks) * 100) : 0
 
-  const tasks = [
-    { title: "Thiết kế UI trang login", progress: 85, status: "Đang làm" },
-    { title: "Tối ưu refresh token", progress: 60, status: "Đang làm" },
-    { title: "Review PR #42", progress: 100, status: "Hoàn thành" }
-  ]
+  const tasks = useMemo(() => {
+    const currentTasks = []
+    if (inProgressTasks && inProgressTasks.length >= 3) {
+      currentTasks.push(...inProgressTasks.slice(0, 3))
+      return currentTasks
+    } else if (inProgressTasks) {
+      currentTasks.push(...inProgressTasks)
+    }
+
+    if (currentTasks.length < 3) {
+      const remainingSlots = 3 - currentTasks.length
+      if (reviewingTasks && reviewingTasks.length >= remainingSlots) {
+        currentTasks.push(...reviewingTasks.slice(0, remainingSlots))
+        return currentTasks
+      } else if (reviewingTasks) {
+        currentTasks.push(...reviewingTasks)
+      }
+    }
+
+    if (currentTasks.length < 3) {
+      const remainingSlots = 3 - currentTasks.length
+      if (newTasks && newTasks.length >= remainingSlots) {
+        currentTasks.push(...newTasks.slice(0, remainingSlots))
+      } else if (newTasks) {
+        currentTasks.push(...newTasks)
+      }
+    }
+
+    return currentTasks
+  }, [inProgressTasks, reviewingTasks, newTasks])
 
   const meetings = [
     { time: "09:30", title: "Daily Standup" },
@@ -176,9 +250,9 @@ function RouteComponent() {
           <Grid.Col span={{ base: 12, md: 7 }}>
             <Paper withBorder p="md" radius="md">
               <Group justify="space-between" align="center" mb="sm">
-                <Title order={4}>Nhiệm vụ của tôi</Title>
-                <Anchor size="sm" c="indigo" href="#">
-                  Xem tất cả
+                <Title order={4}>Task của tôi</Title>
+                <Anchor size="sm" c="indigo">
+                  <Link to="/tasks/weekly">Xem tất cả</Link>
                 </Anchor>
               </Group>
               <Stack>
@@ -187,15 +261,37 @@ function RouteComponent() {
                     <Group justify="space-between" align="center" mb={6}>
                       <Text fw={600}>{t.title}</Text>
                       <Badge
-                        color={t.progress === 100 ? "teal" : "indigo"}
+                        color={
+                          t.status === "in_progress"
+                            ? "teal"
+                            : t.status === "reviewing"
+                              ? "orange"
+                              : "indigo"
+                        }
                         variant="light"
                       >
-                        {t.status}
+                        {t.status === "in_progress"
+                          ? "Đang làm"
+                          : t.status === "reviewing"
+                            ? "Đang review"
+                            : "Mới"}
                       </Badge>
                     </Group>
                     <Progress
-                      value={t.progress}
-                      color={t.progress === 100 ? "teal" : "indigo"}
+                      value={
+                        t.status === "in_progress"
+                          ? 50
+                          : t.status === "reviewing"
+                            ? 75
+                            : 0
+                      }
+                      color={
+                        t.status === "in_progress"
+                          ? "teal"
+                          : t.status === "reviewing"
+                            ? "orange"
+                            : "indigo"
+                      }
                       radius="xl"
                     />
                   </Paper>
