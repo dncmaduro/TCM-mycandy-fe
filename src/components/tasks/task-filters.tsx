@@ -181,8 +181,8 @@ export function TaskFilters({
 
             {/* Sprint */}
             <Select
-              label="Chu kì"
-              placeholder="Chọn chu kì"
+              label="Sprint"
+              placeholder="Chọn Sprint"
               data={sprintOptions}
               value={filters.sprint || null}
               onChange={(value) => updateFilter("sprint", value)}
@@ -321,7 +321,7 @@ export function TaskFilters({
                 </ActionIcon>
               }
             >
-              Chu kì: {sprints.find((s) => s._id === filters.sprint)?.name}
+              Sprint: {sprints.find((s) => s._id === filters.sprint)?.name}
             </Badge>
           )}
 

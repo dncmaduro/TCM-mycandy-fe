@@ -431,7 +431,7 @@ function RouteComponent() {
         }
       },
       {
-        header: "Chu kì",
+        header: "Sprint",
         accessorKey: "sprint",
         cell: ({ row }) => {
           const sprintName = sprintsMap.get(row.original.sprint)?.name

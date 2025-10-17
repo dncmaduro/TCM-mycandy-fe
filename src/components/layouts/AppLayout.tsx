@@ -14,8 +14,7 @@ import {
   Tooltip,
   Kbd,
   Stack,
-  Paper,
-  ScrollArea
+  Paper
 } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { Link, useRouterState } from "@tanstack/react-router"
@@ -202,7 +201,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         p="sm"
         style={{ background: "transparent", border: "none" }}
       >
-        <ScrollArea type="auto" style={{ height: "100%" }}>
+        <Box>
           <Paper
             withBorder
             shadow="sm"
@@ -226,7 +225,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               })}
             </Stack>
           </Paper>
-        </ScrollArea>
+        </Box>
       </AppShell.Navbar>
 
       <AppShell.Main>

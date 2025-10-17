@@ -228,11 +228,11 @@ export const TaskModal = ({ task }: TaskModalProps) => {
         <Controller
           name="sprint"
           control={form.control}
-          rules={{ required: "Chu kì là bắt buộc" }}
+          rules={{ required: "Sprint là bắt buộc" }}
           render={({ field }) => (
             <Select
-              label="Chu kì"
-              placeholder="Chọn chu kì"
+              label="Sprint"
+              placeholder="Chọn Sprint"
               data={sprintsOptions}
               {...field}
               searchable
