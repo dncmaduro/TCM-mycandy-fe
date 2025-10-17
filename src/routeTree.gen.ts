@@ -22,6 +22,7 @@ import { Route as TimeTrackingTimeoffIndexRouteImport } from './routes/time-trac
 import { Route as TimeTrackingRequestsIndexRouteImport } from './routes/time-tracking/requests/index'
 import { Route as TasksWeeklyIndexRouteImport } from './routes/tasks/weekly/index'
 import { Route as TasksTagsIndexRouteImport } from './routes/tasks/tags/index'
+import { Route as TasksSprintsIndexRouteImport } from './routes/tasks/sprints/index'
 import { Route as ManagementUsersIndexRouteImport } from './routes/management/users/index'
 import { Route as CalendarMeetingsIndexRouteImport } from './routes/calendar/meetings/index'
 import { Route as ManagementUsersUserIdRouteImport } from './routes/management/users/$userId'
@@ -93,6 +94,11 @@ const TasksTagsIndexRoute = TasksTagsIndexRouteImport.update({
   path: '/tasks/tags/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TasksSprintsIndexRoute = TasksSprintsIndexRouteImport.update({
+  id: '/tasks/sprints/',
+  path: '/tasks/sprints/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ManagementUsersIndexRoute = ManagementUsersIndexRouteImport.update({
   id: '/management/users/',
   path: '/management/users/',
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/management/users/$userId': typeof ManagementUsersUserIdRoute
   '/calendar/meetings': typeof CalendarMeetingsIndexRoute
   '/management/users': typeof ManagementUsersIndexRoute
+  '/tasks/sprints': typeof TasksSprintsIndexRoute
   '/tasks/tags': typeof TasksTagsIndexRoute
   '/tasks/weekly': typeof TasksWeeklyIndexRoute
   '/time-tracking/requests': typeof TimeTrackingRequestsIndexRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/management/users/$userId': typeof ManagementUsersUserIdRoute
   '/calendar/meetings': typeof CalendarMeetingsIndexRoute
   '/management/users': typeof ManagementUsersIndexRoute
+  '/tasks/sprints': typeof TasksSprintsIndexRoute
   '/tasks/tags': typeof TasksTagsIndexRoute
   '/tasks/weekly': typeof TasksWeeklyIndexRoute
   '/time-tracking/requests': typeof TimeTrackingRequestsIndexRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/management/users/$userId': typeof ManagementUsersUserIdRoute
   '/calendar/meetings/': typeof CalendarMeetingsIndexRoute
   '/management/users/': typeof ManagementUsersIndexRoute
+  '/tasks/sprints/': typeof TasksSprintsIndexRoute
   '/tasks/tags/': typeof TasksTagsIndexRoute
   '/tasks/weekly/': typeof TasksWeeklyIndexRoute
   '/time-tracking/requests/': typeof TimeTrackingRequestsIndexRoute
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/management/users/$userId'
     | '/calendar/meetings'
     | '/management/users'
+    | '/tasks/sprints'
     | '/tasks/tags'
     | '/tasks/weekly'
     | '/time-tracking/requests'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/management/users/$userId'
     | '/calendar/meetings'
     | '/management/users'
+    | '/tasks/sprints'
     | '/tasks/tags'
     | '/tasks/weekly'
     | '/time-tracking/requests'
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/management/users/$userId'
     | '/calendar/meetings/'
     | '/management/users/'
+    | '/tasks/sprints/'
     | '/tasks/tags/'
     | '/tasks/weekly/'
     | '/time-tracking/requests/'
@@ -234,6 +246,7 @@ export interface RootRouteChildren {
   ManagementUsersUserIdRoute: typeof ManagementUsersUserIdRoute
   CalendarMeetingsIndexRoute: typeof CalendarMeetingsIndexRoute
   ManagementUsersIndexRoute: typeof ManagementUsersIndexRoute
+  TasksSprintsIndexRoute: typeof TasksSprintsIndexRoute
   TasksTagsIndexRoute: typeof TasksTagsIndexRoute
   TasksWeeklyIndexRoute: typeof TasksWeeklyIndexRoute
   TimeTrackingRequestsIndexRoute: typeof TimeTrackingRequestsIndexRoute
@@ -333,6 +346,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TasksTagsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tasks/sprints/': {
+      id: '/tasks/sprints/'
+      path: '/tasks/sprints'
+      fullPath: '/tasks/sprints'
+      preLoaderRoute: typeof TasksSprintsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/management/users/': {
       id: '/management/users/'
       path: '/management/users'
@@ -370,6 +390,7 @@ const rootRouteChildren: RootRouteChildren = {
   ManagementUsersUserIdRoute: ManagementUsersUserIdRoute,
   CalendarMeetingsIndexRoute: CalendarMeetingsIndexRoute,
   ManagementUsersIndexRoute: ManagementUsersIndexRoute,
+  TasksSprintsIndexRoute: TasksSprintsIndexRoute,
   TasksTagsIndexRoute: TasksTagsIndexRoute,
   TasksWeeklyIndexRoute: TasksWeeklyIndexRoute,
   TimeTrackingRequestsIndexRoute: TimeTrackingRequestsIndexRoute,

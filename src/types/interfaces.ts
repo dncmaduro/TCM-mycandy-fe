@@ -30,6 +30,7 @@ export interface ITask {
   title: string
   description?: string
   parentTaskId?: string | null
+  sprint: string
   status: TaskStatus
   priority: TaskPriority
   createdBy: string
@@ -49,4 +50,14 @@ export interface ITaskTags {
   createdAt: string
   updatedAt: string
   deletedAt?: string
+}
+
+export interface ISprint {
+  _id: string
+  name: string
+  startDate: Date
+  endDate: Date
+  createdAt: Date
+  updatedAt: Date
+  deletedAt?: Date | null
 }

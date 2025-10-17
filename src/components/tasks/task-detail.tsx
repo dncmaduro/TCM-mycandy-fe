@@ -9,6 +9,7 @@ import {
 } from "@mantine/core"
 import { ITask } from "../../types/interfaces"
 import { useUsers } from "../../hooks/use-users"
+import { useSprints } from "../../hooks/use-sprints"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { IconPencil } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
@@ -25,6 +26,7 @@ interface TaskDetailProps {
 
 export const TaskDetail = ({ task }: TaskDetailProps) => {
   const { getUser } = useUsers()
+  const { getSprint } = useSprints()
   const { updateTask } = useTasks()
   const qc = useQueryClient()
 
@@ -38,6 +40,13 @@ export const TaskDetail = ({ task }: TaskDetailProps) => {
   const { data: createdByData } = useQuery({
     queryKey: ["user", task.createdBy],
     queryFn: () => getUser(task.createdBy),
+    staleTime: Infinity
+  })
+
+  const { data: sprintData } = useQuery({
+    queryKey: ["sprint", task.sprint],
+    queryFn: () => getSprint(task.sprint),
+    enabled: !!task.sprint,
     staleTime: Infinity
   })
 
@@ -64,7 +73,8 @@ export const TaskDetail = ({ task }: TaskDetailProps) => {
       priority: task.priority,
       dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
       assignedTo: task.assignedTo || undefined,
-      tags: task.tags || []
+      tags: task.tags || [],
+      sprint: task.sprint || undefined
     }
   })
 
@@ -84,6 +94,7 @@ export const TaskDetail = ({ task }: TaskDetailProps) => {
         color: "green"
       })
       qc.invalidateQueries({ queryKey: ["tasks-weekly"] })
+      qc.invalidateQueries({ queryKey: ["kanban-tasks"] })
     },
     onError: (error) => {
       console.error(error)
@@ -203,6 +214,17 @@ export const TaskDetail = ({ task }: TaskDetailProps) => {
             Thẻ phân loại
           </Text>
           <TaskTagsDisplay tagNames={task.tags} maxVisible={10} />
+        </div>
+      )}
+
+      {task.sprint && (
+        <div>
+          <Text size="sm" fw={600} c="dimmed" mb={4}>
+            Chu kì
+          </Text>
+          <Badge variant="dot" color="violet" size="lg">
+            {sprintData?.data.sprint?.name || task.sprint}
+          </Badge>
         </div>
       )}
 

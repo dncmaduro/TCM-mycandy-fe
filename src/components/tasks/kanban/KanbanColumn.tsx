@@ -24,6 +24,7 @@ interface KanbanColumnProps {
   color: string
   filters: Omit<SearchTasksParams, "page" | "limit" | "status">
   usersMap: Map<string, { _id: string; name: string; avatarUrl?: string }>
+  sprintsMap: Map<string, { _id: string; name: string }>
   onViewTask: (task: ITask) => void
   onDeleteTask: (task: ITask) => void
 }
@@ -34,6 +35,7 @@ export function KanbanColumn({
   color,
   filters,
   usersMap,
+  sprintsMap,
   onViewTask,
   onDeleteTask
 }: KanbanColumnProps) {
@@ -73,9 +75,8 @@ export function KanbanColumn({
   }, [entry?.isIntersecting, hasNextPage, isFetchingNextPage, fetchNextPage])
 
   const tasks = data?.pages.flatMap((page) => page.data) ?? []
-  const totalCount = data?.pages[0]?.totalPages
-    ? data.pages[0].totalPages * 10
-    : tasks.length
+  // Calculate total count: if we have all pages loaded, use actual count, otherwise estimate
+  const totalCount = hasNextPage ? `${tasks.length}+` : tasks.length
 
   return (
     <Paper
@@ -148,6 +149,7 @@ export function KanbanColumn({
                     <KanbanCard
                       task={task}
                       usersMap={usersMap}
+                      sprintsMap={sprintsMap}
                       onView={onViewTask}
                       onDelete={onDeleteTask}
                     />

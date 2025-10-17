@@ -35,6 +35,7 @@ const createColumnFirstCollision =
 interface KanbanBoardProps {
   filters: Omit<SearchTasksParams, "page" | "limit" | "status">
   usersMap: Map<string, { _id: string; name: string; avatarUrl?: string }>
+  sprintsMap: Map<string, { _id: string; name: string }>
   onViewTask: (task: ITask) => void
   onDeleteTask: (task: ITask) => void
 }
@@ -55,6 +56,7 @@ const COLUMNS: Array<{
 export function KanbanBoard({
   filters,
   usersMap,
+  sprintsMap,
   onViewTask,
   onDeleteTask
 }: KanbanBoardProps) {
@@ -198,6 +200,7 @@ export function KanbanBoard({
               color={column.color}
               filters={filters}
               usersMap={usersMap}
+              sprintsMap={sprintsMap}
               onViewTask={onViewTask}
               onDeleteTask={onDeleteTask}
             />
@@ -211,6 +214,7 @@ export function KanbanBoard({
             <KanbanCard
               task={activeTask}
               usersMap={usersMap}
+              sprintsMap={sprintsMap}
               onView={() => {}}
               onDelete={() => {}}
             />

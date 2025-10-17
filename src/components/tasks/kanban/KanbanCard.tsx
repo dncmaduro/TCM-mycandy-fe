@@ -16,6 +16,7 @@ import { TaskTagsDisplay } from "../TaskTagsDisplay"
 interface KanbanCardProps {
   task: ITask
   usersMap: Map<string, { _id: string; name: string; avatarUrl?: string }>
+  sprintsMap: Map<string, { _id: string; name: string }>
   onView: (task: ITask) => void
   onDelete: (task: ITask) => void
 }
@@ -23,6 +24,7 @@ interface KanbanCardProps {
 export function KanbanCard({
   task,
   usersMap,
+  sprintsMap,
   onView,
   onDelete
 }: KanbanCardProps) {
@@ -99,6 +101,13 @@ export function KanbanCard({
         {/* Tags */}
         {task.tags && task.tags.length > 0 && (
           <TaskTagsDisplay tagNames={task.tags} maxVisible={2} />
+        )}
+
+        {/* Sprint */}
+        {task.sprint && (
+          <Badge size="sm" variant="dot" color="violet">
+            {sprintsMap.get(task.sprint)?.name || "N/A"}
+          </Badge>
         )}
 
         {/* Footer */}
