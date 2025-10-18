@@ -26,15 +26,15 @@ import {
 } from "@tabler/icons-react"
 import { useEnsureAuth } from "../../hooks/use-ensure-auth"
 import { useAuth } from "../../hooks/use-auth"
-import { SidebarItem } from "../navigation/SidebarItem"
-import { SubSidebarItem } from "../navigation/SubSidebarItem"
+import { SidebarItem } from "../navigation/sidebar-item"
+import { SubSidebarItem } from "../navigation/sub-sidebar-item"
 import {
   SECTION_KEYS,
   type SectionKey,
   type MenuItem,
   getVisibleNavItems,
   getVisibleSubMenu
-} from "../navigation/menuConfig"
+} from "../navigation/menu-config"
 import { useRoles } from "../../hooks/use-roles"
 import { useQuery } from "@tanstack/react-query"
 import { Role } from "../../constants/role"

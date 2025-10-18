@@ -18,7 +18,7 @@ import { FormProvider, useForm } from "react-hook-form"
 import { UpdateTaskRequest } from "../../types/models"
 import { useTasks } from "../../hooks/use-tasks"
 import { notifications } from "@mantine/notifications"
-import { TaskTagsDisplay } from "./TaskTagsDisplay"
+import { TaskTagsDisplay } from "./task-tags-display"
 
 interface TaskDetailProps {
   task: ITask

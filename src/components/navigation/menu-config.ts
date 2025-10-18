@@ -9,7 +9,7 @@ import {
   IconCalendarRepeat,
   IconChartBar
 } from "@tabler/icons-react"
-import type { IconComponent } from "./SidebarItem"
+import type { IconComponent } from "./sidebar-item"
 import type { Role } from "../../constants/role"
 
 export const SECTION_KEYS = [
@@ -72,8 +72,14 @@ export const subMenus: Record<SectionKey, MenuItem[]> = {
       icon: IconClockHour4
     },
     {
-      label: "Lịch nghỉ",
-      to: "/time-tracking/timeoff",
+      label: "Quản lý yêu cầu",
+      to: "/time-tracking/manage-requests",
+      icon: IconListCheck,
+      allowedRoles: ["superadmin", "admin"]
+    },
+    {
+      label: "Timesheet",
+      to: "/time-tracking/timesheet",
       icon: IconCalendarEvent
     }
   ],
@@ -101,11 +107,6 @@ export function getVisibleSubMenu(
   section: SectionKey,
   role?: Role
 ): MenuItem[] {
-  console.log(
-    role,
-    subMenus[section],
-    subMenus[section]?.filter((i) => isAllowed(i, role))
-  )
   return (subMenus[section] ?? []).filter((i) => isAllowed(i, role))
 }
 

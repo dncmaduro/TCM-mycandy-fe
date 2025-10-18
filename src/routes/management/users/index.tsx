@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useQuery, keepPreviousData } from "@tanstack/react-query"
-import { AppLayout } from "../../../components/layouts/AppLayout"
+import { AppLayout } from "../../../components/layouts/app-layout"
 import { DataTable } from "../../../components/common/data-table"
 import { useUsers } from "../../../hooks/use-users"
 import { useState, useMemo } from "react"

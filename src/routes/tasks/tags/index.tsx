@@ -32,7 +32,7 @@ import {
 import { useDebouncedValue } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { modals } from "@mantine/modals"
-import { AppLayout } from "../../../components/layouts/AppLayout"
+import { AppLayout } from "../../../components/layouts/app-layout"
 
 export const Route = createFileRoute("/tasks/tags/")({
   component: RouteComponent

@@ -4,7 +4,7 @@ import { useEnsureAuth } from "../../hooks/use-ensure-auth"
 import { useUsers } from "../../hooks/use-users"
 import { useAuthStore } from "../../stores/authState"
 import { useQuery } from "@tanstack/react-query"
-import { AuthLayout } from "../../components/layouts/AuthLayout"
+import { AuthLayout } from "../../components/layouts/auth-layout"
 import {
   Stack,
   ThemeIcon,

@@ -1,13 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { AppLayout } from "../../../components/layouts/app-layout"
 import { useTimeRequests } from "../../../hooks/use-time-requests"
+import { useUsers } from "../../../hooks/use-users"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
-import type { ITimeRequest, TimeRequestType } from "../../../types/interfaces"
-import { UpdateTimeRequestRequest } from "../../../types/models"
+import type {
+  ITimeRequest,
+  TimeRequestStatus,
+  TimeRequestType
+} from "../../../types/interfaces"
 import { DataTable } from "../../../components/common/data-table"
-import { TimeRequestForm } from "../../../components/time-requests/request-form"
 import {
   ActionIcon,
   Badge,
@@ -17,48 +20,79 @@ import {
   Text,
   Title,
   Select,
-  Divider
+  Avatar,
+  Divider,
+  Center
 } from "@mantine/core"
-import { IconPlus, IconEye, IconTrash, IconPencil } from "@tabler/icons-react"
+import { IconEye, IconCheck, IconX } from "@tabler/icons-react"
+import { DateInput } from "@mantine/dates"
 import { notifications } from "@mantine/notifications"
 import { modals } from "@mantine/modals"
+import { Can } from "../../../components/common/Can"
 
-export const Route = createFileRoute("/time-tracking/requests/")({
+export const Route = createFileRoute("/time-tracking/manage-requests/")({
   component: RouteComponent
 })
 
 function RouteComponent() {
+  return (
+    <Can
+      roles={["superadmin", "admin"]}
+      fallback={
+        <AppLayout>
+          <Center h={200}>
+            <Text c="dimmed">Bạn không có quyền truy cập trang này</Text>
+          </Center>
+        </AppLayout>
+      }
+    >
+      <ManageRequestsContent />
+    </Can>
+  )
+}
+
+function ManageRequestsContent() {
   const qc = useQueryClient()
-  const {
-    getOwnTimeRequests,
-    createTimeRequest,
-    updateTimeRequest,
-    deleteTimeRequest
-  } = useTimeRequests()
+  const { getAllTimeRequests, approveTimeRequest, rejectTimeRequest } =
+    useTimeRequests()
+  const { publicSearchUsers } = useUsers()
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-  const [deletedFilter, setDeletedFilter] = useState<boolean>(false)
+  const [status, setStatus] = useState<TimeRequestStatus | "">("")
+  const [date, setDate] = useState<Date | null>(null)
+
+  const { data: usersData } = useQuery({
+    queryKey: ["public-users"],
+    queryFn: () => publicSearchUsers({ limit: 300, page: 1 }),
+    staleTime: Infinity
+  })
+
+  const usersMap = useMemo(() => {
+    const list = usersData?.data?.data ?? []
+    return new Map<string, any>(list.map((u: any) => [u._id, u]))
+  }, [usersData])
 
   const { data, isLoading } = useQuery({
-    queryKey: ["own-time-requests", page, pageSize, deletedFilter],
+    queryKey: ["all-time-requests", page, pageSize, status, date],
     queryFn: async () => {
-      const resp = await getOwnTimeRequests({
+      const resp = await getAllTimeRequests({
         page,
         limit: pageSize,
-        deleted: deletedFilter
+        status: status || undefined,
+        date: date || undefined
       })
       return resp.data
     }
   })
 
-  const { mutate: handleCreate, isPending: isCreating } = useMutation({
-    mutationFn: createTimeRequest,
+  const { mutate: handleApprove, isPending: isApproving } = useMutation({
+    mutationFn: approveTimeRequest,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["own-time-requests"] })
+      qc.invalidateQueries({ queryKey: ["all-time-requests"] })
       notifications.show({
         title: "Thành công",
-        message: "Đã tạo yêu cầu",
+        message: "Đã duyệt yêu cầu",
         color: "green"
       })
       modals.closeAll()
@@ -66,25 +100,19 @@ function RouteComponent() {
     onError: (error: any) => {
       notifications.show({
         title: "Lỗi",
-        message: error.message || "Không thể tạo yêu cầu",
+        message: error.message || "Không thể duyệt yêu cầu",
         color: "red"
       })
     }
   })
 
-  const { mutate: handleUpdate, isPending: isUpdating } = useMutation({
-    mutationFn: ({
-      id,
-      data
-    }: {
-      id: string
-      data: UpdateTimeRequestRequest
-    }) => updateTimeRequest(id, data),
+  const { mutate: handleReject, isPending: isRejecting } = useMutation({
+    mutationFn: rejectTimeRequest,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["own-time-requests"] })
+      qc.invalidateQueries({ queryKey: ["all-time-requests"] })
       notifications.show({
         title: "Thành công",
-        message: "Đã cập nhật yêu cầu",
+        message: "Đã từ chối yêu cầu",
         color: "green"
       })
       modals.closeAll()
@@ -92,26 +120,7 @@ function RouteComponent() {
     onError: (error: any) => {
       notifications.show({
         title: "Lỗi",
-        message: error.message || "Không thể cập nhật yêu cầu",
-        color: "red"
-      })
-    }
-  })
-
-  const { mutate: handleDelete } = useMutation({
-    mutationFn: deleteTimeRequest,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["own-time-requests"] })
-      notifications.show({
-        title: "Thành công",
-        message: "Đã xóa yêu cầu",
-        color: "green"
-      })
-    },
-    onError: (error: any) => {
-      notifications.show({
-        title: "Lỗi",
-        message: error.message || "Không thể xóa yêu cầu",
+        message: error.message || "Không thể từ chối yêu cầu",
         color: "red"
       })
     }
@@ -122,53 +131,45 @@ function RouteComponent() {
       title: <b>Chi tiết yêu cầu</b>,
       size: "xl",
       children: (
-        <TimeRequestDetail
+        <ManageRequestDetail
           request={request}
-          onEdit={() => openEditModal(request)}
+          user={usersMap.get(request.createdBy)}
+          onApprove={() => handleApprove(request._id)}
+          onReject={() => handleReject(request._id)}
+          isApproving={isApproving}
+          isRejecting={isRejecting}
         />
       )
-    })
-  }
-
-  const openCreateModal = () => {
-    modals.open({
-      title: <b>Tạo yêu cầu mới</b>,
-      size: "xl",
-      children: (
-        <TimeRequestForm onSubmit={handleCreate} isLoading={isCreating} />
-      )
-    })
-  }
-
-  const openEditModal = (request: ITimeRequest) => {
-    modals.closeAll()
-    modals.open({
-      title: <b>Chỉnh sửa yêu cầu</b>,
-      size: "xl",
-      children: (
-        <TimeRequestForm
-          request={request}
-          onSubmit={(data) => handleUpdate({ id: request._id, data })}
-          isLoading={isUpdating}
-        />
-      )
-    })
-  }
-
-  const openDeleteConfirm = (request: ITimeRequest) => {
-    modals.openConfirmModal({
-      title: "Xác nhận xóa yêu cầu",
-      children: (
-        <Text size="sm">Bạn có chắc chắn muốn xóa yêu cầu này không?</Text>
-      ),
-      labels: { confirm: "Xóa", cancel: "Hủy" },
-      confirmProps: { color: "red" },
-      onConfirm: () => handleDelete(request._id)
     })
   }
 
   const columns = useMemo<ColumnDef<ITimeRequest>[]>(
     () => [
+      {
+        header: "Người tạo",
+        accessorKey: "createdBy",
+        cell: ({ getValue }) => {
+          const userId = getValue() as string
+          const user = usersMap.get(userId)
+          return user ? (
+            <Group gap="sm">
+              <Avatar src={user.avatarUrl} size="sm" radius="xl" />
+              <div>
+                <Text size="sm" fw={500}>
+                  {user.name}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {user.email}
+                </Text>
+              </div>
+            </Group>
+          ) : (
+            <Text size="sm" c="dimmed">
+              Unknown
+            </Text>
+          )
+        }
+      },
       {
         header: "Loại",
         accessorKey: "type",
@@ -262,35 +263,27 @@ function RouteComponent() {
             >
               <IconEye size={18} />
             </ActionIcon>
-            <ActionIcon
-              variant="subtle"
-              color="red"
-              onClick={() => openDeleteConfirm(row.original)}
-            >
-              <IconTrash size={18} />
-            </ActionIcon>
           </Group>
         )
       }
     ],
-    []
+    [usersMap]
   )
 
   const rows = data?.data ?? []
   const totalPages = data?.totalPages ?? 1
 
+  const statusOptions = [
+    { value: "", label: "Tất cả" },
+    { value: "pending", label: "Chờ duyệt" },
+    { value: "approved", label: "Đã duyệt" },
+    { value: "rejected", label: "Từ chối" }
+  ]
+
   return (
     <AppLayout>
       <Stack gap="md">
-        <Group justify="space-between">
-          <Title order={3}>Yêu cầu thời gian làm việc</Title>
-          <Button
-            leftSection={<IconPlus size={18} />}
-            onClick={openCreateModal}
-          >
-            Tạo yêu cầu
-          </Button>
-        </Group>
+        <Title order={3}>Quản lý yêu cầu thời gian</Title>
 
         <DataTable<ITimeRequest, unknown>
           columns={columns}
@@ -306,15 +299,23 @@ function RouteComponent() {
             setPage(1)
           }}
           extraFilters={
-            <Select
-              placeholder="Trạng thái"
-              value={deletedFilter.toString()}
-              onChange={(v) => setDeletedFilter(v === "true")}
-              data={[
-                { value: "false", label: "Hoạt động" },
-                { value: "true", label: "Đã xóa" }
-              ]}
-            />
+            <Group gap="sm">
+              <Select
+                placeholder="Trạng thái"
+                value={status}
+                onChange={(v) => setStatus((v as TimeRequestStatus) || "")}
+                data={statusOptions}
+                style={{ minWidth: 150 }}
+              />
+              <DateInput
+                placeholder="Chọn ngày"
+                value={date}
+                onChange={setDate}
+                clearable
+                valueFormat="DD/MM/YYYY"
+                style={{ minWidth: 150 }}
+              />
+            </Group>
           }
           extraActions={
             <Text c="dimmed" size="sm">
@@ -327,12 +328,23 @@ function RouteComponent() {
   )
 }
 
-interface TimeRequestDetailProps {
+interface ManageRequestDetailProps {
   request: ITimeRequest
-  onEdit: () => void
+  user: any
+  onApprove: () => void
+  onReject: () => void
+  isApproving: boolean
+  isRejecting: boolean
 }
 
-function TimeRequestDetail({ request, onEdit }: TimeRequestDetailProps) {
+function ManageRequestDetail({
+  request,
+  user,
+  onApprove,
+  onReject,
+  isApproving,
+  isRejecting
+}: ManageRequestDetailProps) {
   const typeMap = {
     overtime: { label: "Tăng ca", color: "blue" },
     day_off: { label: "Nghỉ phép", color: "green" },
@@ -349,6 +361,29 @@ function TimeRequestDetail({ request, onEdit }: TimeRequestDetailProps) {
 
   return (
     <Stack gap="md">
+      <div>
+        <Text size="sm" fw={600} c="dimmed" mb={4}>
+          Người tạo
+        </Text>
+        {user ? (
+          <Group gap="sm">
+            <Avatar src={user.avatarUrl} radius="xl" size="sm" />
+            <div>
+              <Text size="md" fw={500}>
+                {user.name}
+              </Text>
+              <Text c="dimmed" size="xs">
+                {user.email}
+              </Text>
+            </div>
+          </Group>
+        ) : (
+          <Text c="dimmed">Unknown User</Text>
+        )}
+      </div>
+
+      <Divider />
+
       <Group grow>
         <div>
           <Text size="sm" fw={600} c="dimmed" mb={4}>
@@ -371,8 +406,6 @@ function TimeRequestDetail({ request, onEdit }: TimeRequestDetailProps) {
           </Badge>
         </div>
       </Group>
-
-      <Divider />
 
       <div>
         <Text size="sm" fw={600} c="dimmed" mb={4}>
@@ -418,10 +451,36 @@ function TimeRequestDetail({ request, onEdit }: TimeRequestDetailProps) {
         </div>
       </Group>
 
+      {request.reviewedBy && (
+        <div>
+          <Text size="sm" fw={600} c="dimmed" mb={4}>
+            Đã duyệt bởi
+          </Text>
+          <Text size="sm">{request.reviewedBy}</Text>
+          <Text size="xs" c="dimmed">
+            {request.reviewedAt &&
+              new Date(request.reviewedAt).toLocaleString("vi-VN")}
+          </Text>
+        </div>
+      )}
+
       {request.status === "pending" && (
         <Group justify="flex-end" mt="md">
-          <Button variant="light" leftSection={<IconPencil />} onClick={onEdit}>
-            Chỉnh sửa
+          <Button
+            variant="light"
+            color="red"
+            leftSection={<IconX />}
+            onClick={onReject}
+            loading={isRejecting}
+          >
+            Từ chối
+          </Button>
+          <Button
+            leftSection={<IconCheck />}
+            onClick={onApprove}
+            loading={isApproving}
+          >
+            Duyệt
           </Button>
         </Group>
       )}

@@ -26,7 +26,7 @@ import {
 } from "@tabler/icons-react"
 import { notifications } from "@mantine/notifications"
 import { modals } from "@mantine/modals"
-import { AppLayout } from "../../../components/layouts/AppLayout"
+import { AppLayout } from "../../../components/layouts/app-layout"
 import { DateInput } from "@mantine/dates"
 import { Can } from "../../../components/common/Can"
 
