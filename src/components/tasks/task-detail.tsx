@@ -5,7 +5,8 @@ import {
   Stack,
   Text,
   Avatar,
-  Divider
+  Divider,
+  Tabs
 } from "@mantine/core"
 import { ITask } from "../../types/interfaces"
 import { useUsers } from "../../hooks/use-users"
@@ -19,6 +20,7 @@ import { UpdateTaskRequest } from "../../types/models"
 import { useTasks } from "../../hooks/use-tasks"
 import { notifications } from "@mantine/notifications"
 import { TaskTagsDisplay } from "./task-tags-display"
+import { TaskLogs } from "./task-logs"
 
 interface TaskDetailProps {
   task: ITask
@@ -95,6 +97,7 @@ export const TaskDetail = ({ task }: TaskDetailProps) => {
       })
       qc.invalidateQueries({ queryKey: ["tasks-weekly"] })
       qc.invalidateQueries({ queryKey: ["kanban-tasks"] })
+      qc.invalidateQueries({ queryKey: ["task-logs", task._id] })
     },
     onError: (error) => {
       console.error(error)
@@ -279,6 +282,25 @@ export const TaskDetail = ({ task }: TaskDetailProps) => {
           </Text>
         </div>
       )}
+
+      <Divider />
+
+      <Tabs defaultValue="logs" keepMounted={false}>
+        <Tabs.List>
+          <Tabs.Tab value="logs">Lịch sử thay đổi</Tabs.Tab>
+          <Tabs.Tab value="comments">Bình luận</Tabs.Tab>
+        </Tabs.List>
+
+        <Tabs.Panel value="logs" pt="md">
+          <TaskLogs taskId={task._id} />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="comments" pt="md">
+          <Text c="dimmed" ta="center" py="xl">
+            Tính năng bình luận sẽ được triển khai sau
+          </Text>
+        </Tabs.Panel>
+      </Tabs>
 
       <Divider />
 

@@ -1,10 +1,13 @@
 import { Role } from "../constants/role"
 import {
+  INotification,
   ISprint,
   ITask,
+  ITaskLog,
   ITaskTags,
   ITimeRequest,
   IUser,
+  TaskLogType,
   TaskPriority,
   TaskStatus,
   TimeRequestStatus,
@@ -416,4 +419,52 @@ export interface GetTimeRequestResponse {
 /** @interface */
 export interface GetOwnTimeRequestByMonthResponse {
   requests: ITimeRequest[]
+}
+
+/** @interface */
+export interface SearchTaskLogsParams {
+  taskId?: string
+  userId?: string
+  type?: TaskLogType
+  startTime?: Date
+  endTime?: Date
+  page?: number
+  limit?: number
+}
+
+/** @interface */
+export interface SearchTaskLogsResponse {
+  data: ITaskLog[]
+  totalPages: number
+}
+
+/** @interface */
+export interface GetNotificationsParams {
+  page?: number
+  limit?: number
+  isRead?: boolean
+}
+
+/** @interface */
+export interface GetNotificationsResponse {
+  data: INotification[]
+  totalPages: number
+  unreadCount: number
+}
+
+/** @interface */
+export interface SetAllNotificationsReadResponse {
+  message: string
+}
+
+/** @interface */
+export interface SetNotificationReadResponse {
+  message: string
+  notification: INotification
+}
+
+/** @interface */
+export interface SetNotificationUnreadResponse {
+  message: string
+  notification: INotification
 }

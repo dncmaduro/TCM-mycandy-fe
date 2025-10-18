@@ -86,3 +86,41 @@ export interface ITimeRequest {
   updatedAt: Date
   deletedAt?: Date | null
 }
+
+export type TaskLogType =
+  | "status_change"
+  | "comment"
+  | "update_information"
+  | "assignment"
+
+export interface ITaskLog {
+  _id: string
+  taskId: string
+  type: TaskLogType
+  userId: string
+  meta?: Record<string, any>
+  createdAt: Date
+}
+
+export type NotificationType =
+  | "task_assigned"
+  | "task_updated"
+  | "comment_mentioned"
+  | "task_status_changed"
+  | "task_due_soon"
+  | "comment_added"
+  | "time_request_approved"
+  | "time_request_rejected"
+  | "time_request_added"
+  | "sprint_started"
+  | "new_user"
+
+export interface INotification {
+  _id: string
+  userId: string
+  type: NotificationType
+  title: string
+  message: string
+  isRead: boolean
+  createdAt: Date
+}

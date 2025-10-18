@@ -304,8 +304,10 @@ function RouteComponent() {
 
   const { mutate: handleCreate } = useMutation({
     mutationFn: (payload: CreateTaskRequest) => createTask(payload),
-    onSuccess: () => {
+    onSuccess: (response) => {
       qc.invalidateQueries({ queryKey: ["tasks-weekly"] })
+      qc.invalidateQueries({ queryKey: ["kanban-tasks"] })
+      qc.invalidateQueries({ queryKey: ["task-logs", response.data.task._id] })
       notifications.show({
         title: "Thành công",
         message: "Đã tạo task mới",
@@ -354,7 +356,6 @@ function RouteComponent() {
           sprint: values.sprint
         }
         handleCreate(payload)
-        qc.invalidateQueries({ queryKey: ["tasks-weekly"] })
         notifications.show({
           title: "Thành công",
           message: "Đã tạo task mới",

@@ -6,6 +6,8 @@ import {
   GetMyCurrentSprintStatsResponse,
   GetSubtasksResponse,
   GetTaskResponse,
+  SearchTaskLogsParams,
+  SearchTaskLogsResponse,
   SearchTasksParams,
   SearchTasksResponse,
   UpdateTaskRequest,
@@ -91,6 +93,15 @@ export const useTasks = () => {
     })
   }
 
+  const searchTaskLogs = async (params: SearchTaskLogsParams) => {
+    return callApi<never, SearchTaskLogsResponse>({
+      method: "GET",
+      path: `/task-logs`,
+      token: accessToken || undefined,
+      params
+    })
+  }
+
   return {
     createTask,
     updateTask,
@@ -100,6 +111,7 @@ export const useTasks = () => {
     getSubTasks,
     getTask,
     getMyCurrentSprintStats,
-    getAllUsersCurrentSprintStats
+    getAllUsersCurrentSprintStats,
+    searchTaskLogs
   }
 }
