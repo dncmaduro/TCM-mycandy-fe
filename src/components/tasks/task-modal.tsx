@@ -21,7 +21,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useEffect, useMemo } from "react"
 import { IconCheck } from "@tabler/icons-react"
 import { ITask } from "../../types/interfaces"
-import { TagsCombobox } from "./TagsCombobox"
+import { TagsCombobox } from "./tags-combobox"
 
 interface TaskModalProps {
   task?: ITask

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { Title, Text, Stack, ThemeIcon, Divider, Anchor } from "@mantine/core"
 import { IconBrandGoogle } from "@tabler/icons-react"
 import { LoginWithGoogleButton } from "../components/login/login-with-google-button"
-import { AuthLayout } from "../components/layouts/AuthLayout"
+import { AuthLayout } from "../components/layouts/auth-layout"
 import { useEffect } from "react"
 import { useAuthStore } from "../stores/authState"
 

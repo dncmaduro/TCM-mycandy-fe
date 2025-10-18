@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { AppLayout } from "../../components/layouts/AppLayout"
+import { AppLayout } from "../../components/layouts/app-layout"
 import {
   Title,
   Text,
@@ -22,10 +22,10 @@ import {
   IconCheck
 } from "@tabler/icons-react"
 import { useMemo, type ElementType } from "react"
-import { useAuthStore } from "../../stores/authState"
 import { useTasks } from "../../hooks/use-tasks"
 import { useQuery } from "@tanstack/react-query"
 import { useUsers } from "../../hooks/use-users"
+import { useTimeRequests } from "../../hooks/use-time-requests"
 
 export const Route = createFileRoute("/home/")({
   component: RouteComponent
@@ -60,7 +60,6 @@ function StatCard({
 }
 
 function RouteComponent() {
-  const user = useAuthStore((s) => s.user)
   const { getMe } = useUsers()
   const { data: meData } = useQuery({
     queryKey: ["me"],
@@ -68,6 +67,7 @@ function RouteComponent() {
     staleTime: Infinity,
     select: (data) => data.data.user
   })
+  const { getOwnTimeRequestsByMonth } = useTimeRequests()
   const { getMyCurrentSprintStats, searchTasks } = useTasks()
   const { data: statsData } = useQuery({
     queryKey: ["my-current-sprint-stats"],
@@ -116,6 +116,22 @@ function RouteComponent() {
     select: (data) => data.data.data,
     enabled: !!meData
   })
+
+  const { data: ownTimeRequestsByMonth } = useQuery({
+    queryKey: ["my-time-requests-this-month"],
+    queryFn: getOwnTimeRequestsByMonth,
+    staleTime: 60000,
+    select: (data) => data.data.requests,
+    enabled: !!meData
+  })
+
+  const requestsCount = useMemo(() => {
+    const total = ownTimeRequestsByMonth?.length || 0
+    const approvedCount = ownTimeRequestsByMonth?.filter(
+      (req) => req.status === "approved"
+    ).length
+    return { total, approvedCount }
+  }, [ownTimeRequestsByMonth])
 
   const stats = statsData?.data || {
     new: 0,
@@ -170,7 +186,7 @@ function RouteComponent() {
     <AppLayout>
       <Stack gap="md">
         <div>
-          <Title order={2}>Xin chào, {user?.name ?? "bạn"}</Title>
+          <Title order={2}>Xin chào, {meData?.name}</Title>
           <Text c="dimmed">Chúc bạn một ngày làm việc hiệu quả.</Text>
         </div>
 
@@ -343,7 +359,10 @@ function RouteComponent() {
                 <ThemeIcon size={22} radius="xl" color="teal" variant="light">
                   <IconCheck size={14} />
                 </ThemeIcon>
-                <Text size="sm">3 yêu cầu duyệt</Text>
+                <Text size="sm">
+                  {requestsCount?.approvedCount}/{requestsCount?.total} yêu cầu
+                  duyệt
+                </Text>
               </Group>
             </Paper>
           </Grid.Col>

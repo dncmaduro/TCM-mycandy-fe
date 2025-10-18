@@ -11,7 +11,7 @@ import {
 } from "@mantine/core"
 import { IconEye, IconTrash, IconGripVertical } from "@tabler/icons-react"
 import type { ITask } from "../../../types/interfaces"
-import { TaskTagsDisplay } from "../TaskTagsDisplay"
+import { TaskTagsDisplay } from "../task-tags-display"
 
 interface KanbanCardProps {
   task: ITask

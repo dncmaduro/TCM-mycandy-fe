@@ -62,3 +62,27 @@ export interface ISprint {
   updatedAt: Date
   deletedAt?: Date | null
 }
+
+export type TimeRequestStatus = "pending" | "approved" | "rejected"
+
+export type TimeRequestType =
+  | "overtime"
+  | "day_off"
+  | "remote_work"
+  | "leave_early"
+  | "late_arrival"
+
+export interface ITimeRequest {
+  _id: string
+  createdBy: string
+  type: TimeRequestType
+  reason: string
+  minutes?: number
+  date: Date | null
+  status: TimeRequestStatus
+  reviewedBy?: string | null
+  reviewedAt?: Date | null
+  createdAt: Date
+  updatedAt: Date
+  deletedAt?: Date | null
+}

@@ -3,9 +3,12 @@ import {
   ISprint,
   ITask,
   ITaskTags,
+  ITimeRequest,
   IUser,
   TaskPriority,
-  TaskStatus
+  TaskStatus,
+  TimeRequestStatus,
+  TimeRequestType
 } from "./interfaces"
 
 /** @interface */
@@ -335,4 +338,82 @@ export interface GetCurrentSprintResponse {
     completed: number
     total: number
   }
+}
+
+/** @interface */
+export interface CreateTimeRequestRequest {
+  type: TimeRequestType
+  reason: string
+  minutes?: number
+  date: Date
+}
+
+/** @interface */
+export interface CreateTimeRequestResponse {
+  request: ITimeRequest
+}
+
+/** @interface */
+export interface UpdateTimeRequestRequest {
+  type?: TimeRequestType
+  reason?: string
+  minutes?: number
+  date?: Date
+}
+
+/** @interface */
+export interface UpdateTimeRequestResponse {
+  request: ITimeRequest
+}
+
+/** @interface */
+export interface GetOwnTimeRequestsParams {
+  page?: number
+  limit?: number
+  deleted?: boolean
+}
+
+/** @interface */
+export interface GetOwnTimeRequestsResponse {
+  data: ITimeRequest[]
+  totalPages: number
+}
+
+/** @interface */
+export interface GetAllTimeRequestsParams {
+  page?: number
+  limit?: number
+  date?: Date
+  status?: TimeRequestStatus
+}
+
+/** @interface */
+export interface GetAllTimeRequestsResponse {
+  data: ITimeRequest[]
+  totalPages: number
+}
+
+/** @interface */
+export interface ApproveTimeRequestResponse {
+  message: string
+}
+
+/** @interface */
+export interface RejectTimeRequestResponse {
+  message: string
+}
+
+/** @interface */
+export interface DeleteTimeRequestResponse {
+  message: string
+}
+
+/** @interface */
+export interface GetTimeRequestResponse {
+  request: ITimeRequest | null
+}
+
+/** @interface */
+export interface GetOwnTimeRequestByMonthResponse {
+  requests: ITimeRequest[]
 }

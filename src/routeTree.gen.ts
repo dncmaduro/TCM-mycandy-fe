@@ -18,8 +18,9 @@ import { Route as HomeIndexRouteImport } from './routes/home/index'
 import { Route as CallbackIndexRouteImport } from './routes/callback/index'
 import { Route as CalendarIndexRouteImport } from './routes/calendar/index'
 import { Route as AccountIndexRouteImport } from './routes/account/index'
-import { Route as TimeTrackingTimeoffIndexRouteImport } from './routes/time-tracking/timeoff/index'
+import { Route as TimeTrackingTimesheetIndexRouteImport } from './routes/time-tracking/timesheet/index'
 import { Route as TimeTrackingRequestsIndexRouteImport } from './routes/time-tracking/requests/index'
+import { Route as TimeTrackingManageRequestsIndexRouteImport } from './routes/time-tracking/manage-requests/index'
 import { Route as TasksWeeklyIndexRouteImport } from './routes/tasks/weekly/index'
 import { Route as TasksTagsIndexRouteImport } from './routes/tasks/tags/index'
 import { Route as TasksSprintsIndexRouteImport } from './routes/tasks/sprints/index'
@@ -73,16 +74,22 @@ const AccountIndexRoute = AccountIndexRouteImport.update({
   path: '/account/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TimeTrackingTimeoffIndexRoute =
-  TimeTrackingTimeoffIndexRouteImport.update({
-    id: '/time-tracking/timeoff/',
-    path: '/time-tracking/timeoff/',
+const TimeTrackingTimesheetIndexRoute =
+  TimeTrackingTimesheetIndexRouteImport.update({
+    id: '/time-tracking/timesheet/',
+    path: '/time-tracking/timesheet/',
     getParentRoute: () => rootRouteImport,
   } as any)
 const TimeTrackingRequestsIndexRoute =
   TimeTrackingRequestsIndexRouteImport.update({
     id: '/time-tracking/requests/',
     path: '/time-tracking/requests/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const TimeTrackingManageRequestsIndexRoute =
+  TimeTrackingManageRequestsIndexRouteImport.update({
+    id: '/time-tracking/manage-requests/',
+    path: '/time-tracking/manage-requests/',
     getParentRoute: () => rootRouteImport,
   } as any)
 const TasksWeeklyIndexRoute = TasksWeeklyIndexRouteImport.update({
@@ -138,8 +145,9 @@ export interface FileRoutesByFullPath {
   '/tasks/sprints': typeof TasksSprintsIndexRoute
   '/tasks/tags': typeof TasksTagsIndexRoute
   '/tasks/weekly': typeof TasksWeeklyIndexRoute
+  '/time-tracking/manage-requests': typeof TimeTrackingManageRequestsIndexRoute
   '/time-tracking/requests': typeof TimeTrackingRequestsIndexRoute
-  '/time-tracking/timeoff': typeof TimeTrackingTimeoffIndexRoute
+  '/time-tracking/timesheet': typeof TimeTrackingTimesheetIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -158,8 +166,9 @@ export interface FileRoutesByTo {
   '/tasks/sprints': typeof TasksSprintsIndexRoute
   '/tasks/tags': typeof TasksTagsIndexRoute
   '/tasks/weekly': typeof TasksWeeklyIndexRoute
+  '/time-tracking/manage-requests': typeof TimeTrackingManageRequestsIndexRoute
   '/time-tracking/requests': typeof TimeTrackingRequestsIndexRoute
-  '/time-tracking/timeoff': typeof TimeTrackingTimeoffIndexRoute
+  '/time-tracking/timesheet': typeof TimeTrackingTimesheetIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -179,8 +188,9 @@ export interface FileRoutesById {
   '/tasks/sprints/': typeof TasksSprintsIndexRoute
   '/tasks/tags/': typeof TasksTagsIndexRoute
   '/tasks/weekly/': typeof TasksWeeklyIndexRoute
+  '/time-tracking/manage-requests/': typeof TimeTrackingManageRequestsIndexRoute
   '/time-tracking/requests/': typeof TimeTrackingRequestsIndexRoute
-  '/time-tracking/timeoff/': typeof TimeTrackingTimeoffIndexRoute
+  '/time-tracking/timesheet/': typeof TimeTrackingTimesheetIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -201,8 +211,9 @@ export interface FileRouteTypes {
     | '/tasks/sprints'
     | '/tasks/tags'
     | '/tasks/weekly'
+    | '/time-tracking/manage-requests'
     | '/time-tracking/requests'
-    | '/time-tracking/timeoff'
+    | '/time-tracking/timesheet'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -221,8 +232,9 @@ export interface FileRouteTypes {
     | '/tasks/sprints'
     | '/tasks/tags'
     | '/tasks/weekly'
+    | '/time-tracking/manage-requests'
     | '/time-tracking/requests'
-    | '/time-tracking/timeoff'
+    | '/time-tracking/timesheet'
   id:
     | '__root__'
     | '/'
@@ -241,8 +253,9 @@ export interface FileRouteTypes {
     | '/tasks/sprints/'
     | '/tasks/tags/'
     | '/tasks/weekly/'
+    | '/time-tracking/manage-requests/'
     | '/time-tracking/requests/'
-    | '/time-tracking/timeoff/'
+    | '/time-tracking/timesheet/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -262,8 +275,9 @@ export interface RootRouteChildren {
   TasksSprintsIndexRoute: typeof TasksSprintsIndexRoute
   TasksTagsIndexRoute: typeof TasksTagsIndexRoute
   TasksWeeklyIndexRoute: typeof TasksWeeklyIndexRoute
+  TimeTrackingManageRequestsIndexRoute: typeof TimeTrackingManageRequestsIndexRoute
   TimeTrackingRequestsIndexRoute: typeof TimeTrackingRequestsIndexRoute
-  TimeTrackingTimeoffIndexRoute: typeof TimeTrackingTimeoffIndexRoute
+  TimeTrackingTimesheetIndexRoute: typeof TimeTrackingTimesheetIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -331,11 +345,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/time-tracking/timeoff/': {
-      id: '/time-tracking/timeoff/'
-      path: '/time-tracking/timeoff'
-      fullPath: '/time-tracking/timeoff'
-      preLoaderRoute: typeof TimeTrackingTimeoffIndexRouteImport
+    '/time-tracking/timesheet/': {
+      id: '/time-tracking/timesheet/'
+      path: '/time-tracking/timesheet'
+      fullPath: '/time-tracking/timesheet'
+      preLoaderRoute: typeof TimeTrackingTimesheetIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/time-tracking/requests/': {
@@ -343,6 +357,13 @@ declare module '@tanstack/react-router' {
       path: '/time-tracking/requests'
       fullPath: '/time-tracking/requests'
       preLoaderRoute: typeof TimeTrackingRequestsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/time-tracking/manage-requests/': {
+      id: '/time-tracking/manage-requests/'
+      path: '/time-tracking/manage-requests'
+      fullPath: '/time-tracking/manage-requests'
+      preLoaderRoute: typeof TimeTrackingManageRequestsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tasks/weekly/': {
@@ -414,8 +435,9 @@ const rootRouteChildren: RootRouteChildren = {
   TasksSprintsIndexRoute: TasksSprintsIndexRoute,
   TasksTagsIndexRoute: TasksTagsIndexRoute,
   TasksWeeklyIndexRoute: TasksWeeklyIndexRoute,
+  TimeTrackingManageRequestsIndexRoute: TimeTrackingManageRequestsIndexRoute,
   TimeTrackingRequestsIndexRoute: TimeTrackingRequestsIndexRoute,
-  TimeTrackingTimeoffIndexRoute: TimeTrackingTimeoffIndexRoute,
+  TimeTrackingTimesheetIndexRoute: TimeTrackingTimesheetIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,6 +1,6 @@
 import { UnstyledButton, Text } from "@mantine/core"
 import { Link } from "@tanstack/react-router"
-import type { IconComponent } from "./SidebarItem"
+import type { IconComponent } from "./sidebar-item"
 
 type SubSidebarItemProps = {
   to: string
