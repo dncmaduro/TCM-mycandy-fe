@@ -10,6 +10,7 @@ import { DataTable } from "../../../components/common/data-table"
 import { TimeRequestForm } from "../../../components/time-requests/request-form"
 import {
   ActionIcon,
+  Avatar,
   Badge,
   Button,
   Group,
@@ -277,7 +278,7 @@ function RouteComponent() {
   )
 
   const rows = data?.data ?? []
-  const totalPages = data?.totalPages ?? 1
+  const total = data?.total ?? 0
 
   return (
     <AppLayout>
@@ -299,7 +300,7 @@ function RouteComponent() {
           pageSizeOptions={[10, 20, 50, 100]}
           enableGlobalFilter={false}
           page={page}
-          totalPages={totalPages}
+          totalPages={Math.ceil(total / pageSize)}
           onPageChange={setPage}
           onPageSizeChange={(newPageSize: number) => {
             setPageSize(newPageSize)
@@ -396,6 +397,66 @@ function TimeRequestDetail({ request, onEdit }: TimeRequestDetailProps) {
         </Text>
         <Text>{new Date(request.date!).toLocaleDateString("vi-VN")}</Text>
       </div>
+
+      <Divider />
+
+      {request.reviewers && request.reviewers.length > 0 && (
+        <div>
+          <Text size="sm" fw={600} c="dimmed" mb={8}>
+            Người duyệt ({request.reviewers.length})
+          </Text>
+          <Stack gap="xs">
+            {request.reviewers.map((reviewer, idx) => {
+              const statusConfig = {
+                pending: { label: "Chờ duyệt", color: "yellow" },
+                approved: { label: "Đã duyệt", color: "green" },
+                rejected: { label: "Từ chối", color: "red" }
+              }
+              const config = statusConfig[reviewer.status]
+
+              return (
+                <Group
+                  key={idx}
+                  justify="space-between"
+                  p="xs"
+                  style={{
+                    border: "1px solid #e9ecef",
+                    borderRadius: 8
+                  }}
+                >
+                  <Group gap="xs">
+                    <Avatar
+                      src={reviewer.profileId.avatarUrl}
+                      radius="xl"
+                      size="sm"
+                    >
+                      {idx + 1}
+                    </Avatar>
+                    <div>
+                      <Text size="sm" fw={500}>
+                        {reviewer.profileId.name || `Reviewer ${idx + 1}`}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {reviewer.profileId._id}
+                      </Text>
+                    </div>
+                  </Group>
+                  <div style={{ textAlign: "right" }}>
+                    <Badge color={config.color} variant="light" size="sm">
+                      {config.label}
+                    </Badge>
+                    {reviewer.reviewedAt && (
+                      <Text size="xs" c="dimmed" mt={4}>
+                        {new Date(reviewer.reviewedAt).toLocaleString("vi-VN")}
+                      </Text>
+                    )}
+                  </div>
+                </Group>
+              )
+            })}
+          </Stack>
+        </div>
+      )}
 
       <Divider />
 

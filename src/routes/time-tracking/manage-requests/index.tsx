@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { AppLayout } from "../../../components/layouts/app-layout"
 import { useTimeRequests } from "../../../hooks/use-time-requests"
-import { useUsers } from "../../../hooks/use-users"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -29,6 +28,7 @@ import { DateInput } from "@mantine/dates"
 import { notifications } from "@mantine/notifications"
 import { modals } from "@mantine/modals"
 import { Can } from "../../../components/common/Can"
+import { useProfile } from "../../../hooks/use-profile"
 
 export const Route = createFileRoute("/time-tracking/manage-requests/")({
   component: RouteComponent
@@ -55,23 +55,23 @@ function ManageRequestsContent() {
   const qc = useQueryClient()
   const { getAllTimeRequests, approveTimeRequest, rejectTimeRequest } =
     useTimeRequests()
-  const { publicSearchUsers } = useUsers()
+  const { publicSearchProfiles } = useProfile()
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [status, setStatus] = useState<TimeRequestStatus | "">("")
   const [date, setDate] = useState<Date | null>(null)
 
-  const { data: usersData } = useQuery({
-    queryKey: ["public-users"],
-    queryFn: () => publicSearchUsers({ limit: 300, page: 1 }),
+  const { data: profilesData } = useQuery({
+    queryKey: ["public-profiles"],
+    queryFn: () => publicSearchProfiles({ limit: 300, page: 1 }),
     staleTime: Infinity
   })
 
   const usersMap = useMemo(() => {
-    const list = usersData?.data?.data ?? []
+    const list = profilesData?.data.data ?? []
     return new Map<string, any>(list.map((u: any) => [u._id, u]))
-  }, [usersData])
+  }, [profilesData])
 
   const { data, isLoading } = useQuery({
     queryKey: ["all-time-requests", page, pageSize, status, date],
@@ -133,7 +133,7 @@ function ManageRequestsContent() {
       children: (
         <ManageRequestDetail
           request={request}
-          user={usersMap.get(request.createdBy)}
+          user={usersMap.get(request.createdBy._id)}
           onApprove={() => handleApprove(request._id)}
           onReject={() => handleReject(request._id)}
           isApproving={isApproving}
@@ -148,18 +148,13 @@ function ManageRequestsContent() {
       {
         header: "Người tạo",
         accessorKey: "createdBy",
-        cell: ({ getValue }) => {
-          const userId = getValue() as string
-          const user = usersMap.get(userId)
-          return user ? (
+        cell: ({ row }) => {
+          console.log(row.original)
+          return row.original.createdBy ? (
             <Group gap="sm">
-              <Avatar src={user.avatarUrl} size="sm" radius="xl" />
               <div>
                 <Text size="sm" fw={500}>
-                  {user.name}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  {user.email}
+                  {row.original.createdBy.name}
                 </Text>
               </div>
             </Group>
@@ -271,7 +266,7 @@ function ManageRequestsContent() {
   )
 
   const rows = data?.data ?? []
-  const totalPages = data?.totalPages ?? 1
+  const total = data?.total ?? 0
 
   const statusOptions = [
     { value: "", label: "Tất cả" },
@@ -292,7 +287,7 @@ function ManageRequestsContent() {
           pageSizeOptions={[10, 20, 50, 100]}
           enableGlobalFilter={false}
           page={page}
-          totalPages={totalPages}
+          totalPages={Math.ceil(total / pageSize)}
           onPageChange={setPage}
           onPageSizeChange={(newPageSize: number) => {
             setPageSize(newPageSize)
@@ -432,6 +427,66 @@ function ManageRequestDetail({
 
       <Divider />
 
+      {request.reviewers && request.reviewers.length > 0 && (
+        <div>
+          <Text size="sm" fw={600} c="dimmed" mb={8}>
+            Người duyệt ({request.reviewers.length})
+          </Text>
+          <Stack gap="xs">
+            {request.reviewers.map((reviewer, idx) => {
+              const statusConfig = {
+                pending: { label: "Chờ duyệt", color: "yellow" },
+                approved: { label: "Đã duyệt", color: "green" },
+                rejected: { label: "Từ chối", color: "red" }
+              }
+              const config = statusConfig[reviewer.status]
+
+              return (
+                <Group
+                  key={idx}
+                  justify="space-between"
+                  p="xs"
+                  style={{
+                    border: "1px solid #e9ecef",
+                    borderRadius: 8
+                  }}
+                >
+                  <Group gap="xs">
+                    <Avatar
+                      src={reviewer.profileId.avatarUrl}
+                      radius="xl"
+                      size="sm"
+                    >
+                      {idx + 1}
+                    </Avatar>
+                    <div>
+                      <Text size="sm" fw={500}>
+                        {reviewer.profileId.name || `Reviewer ${idx + 1}`}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {reviewer.profileId._id}
+                      </Text>
+                    </div>
+                  </Group>
+                  <div style={{ textAlign: "right" }}>
+                    <Badge color={config.color} variant="light" size="sm">
+                      {config.label}
+                    </Badge>
+                    {reviewer.reviewedAt && (
+                      <Text size="xs" c="dimmed" mt={4}>
+                        {new Date(reviewer.reviewedAt).toLocaleString("vi-VN")}
+                      </Text>
+                    )}
+                  </div>
+                </Group>
+              )
+            })}
+          </Stack>
+        </div>
+      )}
+
+      <Divider />
+
       <Group grow>
         <div>
           <Text size="sm" fw={600} c="dimmed" mb={4}>
@@ -450,19 +505,6 @@ function ManageRequestDetail({
           </Text>
         </div>
       </Group>
-
-      {request.reviewedBy && (
-        <div>
-          <Text size="sm" fw={600} c="dimmed" mb={4}>
-            Đã duyệt bởi
-          </Text>
-          <Text size="sm">{request.reviewedBy}</Text>
-          <Text size="xs" c="dimmed">
-            {request.reviewedAt &&
-              new Date(request.reviewedAt).toLocaleString("vi-VN")}
-          </Text>
-        </div>
-      )}
 
       {request.status === "pending" && (
         <Group justify="flex-end" mt="md">

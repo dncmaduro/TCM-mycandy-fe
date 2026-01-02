@@ -1,10 +1,15 @@
 import { Role } from "../constants/role"
 import {
+  INotification,
+  IProfile,
   ISprint,
   ITask,
+  ITaskLog,
   ITaskTags,
   ITimeRequest,
   IUser,
+  ProfileStatus,
+  TaskLogType,
   TaskPriority,
   TaskStatus,
   TimeRequestStatus,
@@ -74,20 +79,20 @@ export interface GetUserResponse {
 }
 
 /** @interface */
-export interface GetRoleResponse {
+export interface GetRolesResponse {
   userId: string
-  role: string
+  roles: string[]
 }
 
 /** @interface */
 export interface SetRoleRequest {
-  role: Role
+  roles: Role[]
 }
 
 /** @interface */
 export interface SetRoleResponse {
   userId: string
-  role: string
+  roles: string[]
 }
 
 /** @interface */
@@ -99,7 +104,18 @@ export interface RemoveRoleResponse {
 /** @interface */
 export interface GetOwnRoleResponse {
   userId: string
-  role: string
+  roles: string[]
+}
+
+/** @interface */
+export interface GetRolesParams {
+  profileId: string
+}
+
+/** @interface */
+export interface GetRolesResponse {
+  profileId: string
+  roles: string[]
 }
 
 /** @interface */
@@ -107,11 +123,14 @@ export interface CreateTaskRequest {
   title: string
   sprint: string
   description?: string
-  parentTaskId?: string
   priority?: TaskPriority
+  aim: number
+  aimUnit?: string
   assignedTo?: string
   dueDate?: Date
   tags?: string[]
+  estimateHours?: number
+  evaluation?: string
 }
 
 /** @interface */
@@ -124,11 +143,15 @@ export interface UpdateTaskRequest {
   title?: string
   sprint?: string
   description?: string
-  status?: TaskStatus
   priority?: TaskPriority
+  aim?: number
+  aimUnit?: string
+  progress?: number
   assignedTo?: string
   dueDate?: Date
   tags?: string[]
+  estimateHours?: number
+  evaluation?: string
 }
 
 /** @interface */
@@ -169,7 +192,7 @@ export interface SearchTasksParams {
 /** @interface */
 export interface SearchTasksResponse {
   data: ITask[]
-  totalPages: number
+  total: number
 }
 
 /** @interface */
@@ -285,12 +308,15 @@ export interface RestoreSprintResponse {
 
 /** @interface */
 export interface GetSprintsParams {
+  page?: number
   limit?: number
+  deleted?: boolean
 }
 
 /** @interface */
 export interface GetSprintsResponse {
   data: ISprint[]
+  total: number
 }
 
 /** @interface */
@@ -309,11 +335,15 @@ export interface GetMyCurrentSprintStatsResponse {
 /** @interface */
 export interface GetAllUsersCurrentSprintStatsResponse {
   users: {
-    userId: string
-    new: number
-    in_progress: number
-    reviewing: number
-    completed: number
+    profile: {
+      _id: string
+      name: string
+    }
+    totalTasks: number
+    totalUnits: number
+    completedTasks: number
+    completedUnits: number
+    totalEstimateHours: number
   }[]
 }
 
@@ -376,7 +406,19 @@ export interface GetOwnTimeRequestsParams {
 /** @interface */
 export interface GetOwnTimeRequestsResponse {
   data: ITimeRequest[]
-  totalPages: number
+  total: number
+}
+
+/** @interface */
+export interface GetPendingTimeRequestsParams {
+  page?: number
+  limit?: number
+}
+
+/** @interface */
+export interface GetPendingTimeRequestsResponse {
+  data: ITimeRequest[]
+  total: number
 }
 
 /** @interface */
@@ -390,7 +432,7 @@ export interface GetAllTimeRequestsParams {
 /** @interface */
 export interface GetAllTimeRequestsResponse {
   data: ITimeRequest[]
-  totalPages: number
+  total: number
 }
 
 /** @interface */
@@ -416,4 +458,294 @@ export interface GetTimeRequestResponse {
 /** @interface */
 export interface GetOwnTimeRequestByMonthResponse {
   requests: ITimeRequest[]
+}
+
+/** @interface */
+export interface GetPendingReviewRequestsParams {
+  page: number
+  limit: number
+  status?: TimeRequestStatus
+}
+
+/** @interface */
+export interface GetPendingReviewRequestsResponse {
+  data: ITimeRequest[]
+  total: number
+}
+
+/** @interface */
+export interface SearchTaskLogsParams {
+  taskId?: string
+  userId?: string
+  type?: TaskLogType
+  startTime?: Date
+  endTime?: Date
+  page?: number
+  limit?: number
+}
+
+/** @interface */
+export interface SearchTaskLogsResponse {
+  data: ITaskLog[]
+  totalPages: number
+}
+
+/** @interface */
+export interface GetNotificationsParams {
+  page?: number
+  limit?: number
+  isRead?: boolean
+}
+
+/** @interface */
+export interface GetNotificationsResponse {
+  data: INotification[]
+  totalPages: number
+  unreadCount: number
+  page: number
+}
+
+/** @interface */
+export interface SetAllNotificationsReadResponse {
+  message: string
+}
+
+/** @interface */
+export interface SetNotificationReadResponse {
+  message: string
+  notification: INotification
+}
+
+/** @interface */
+export interface SetNotificationUnreadResponse {
+  message: string
+  notification: INotification
+}
+
+/** @interface */
+export interface RegisterRequest {
+  email: string
+  password: string
+  name: string
+}
+
+/** @interface */
+export interface RegisterResponse {
+  message: string
+  accountId: string
+  profileId: string
+  verificationRequired: boolean
+}
+
+/** @interface */
+export interface LoginRequest {
+  email: string
+  password: string
+}
+
+/** @interface */
+export interface LoginResponse {
+  accessToken: string
+  refreshToken: string
+  tokenExp: number
+  rtExp: number
+  profile: {
+    id: string
+    name: string
+    status: string
+  }
+}
+
+/** @interface */
+export interface ChangePasswordRequest {
+  oldPassword: string
+  newPassword: string
+}
+
+/** @interface */
+export interface ChangePasswordResponse {
+  message: string
+}
+
+/** @interface */
+export interface ForgotPasswordRequest {
+  email: string
+}
+
+/** @interface */
+export interface ForgotPasswordResponse {
+  message: string
+}
+
+/** @interface */
+export interface ResetPasswordRequest {
+  token: string
+  newPassword: string
+}
+
+/** @interface */
+export interface ResetPasswordResponse {
+  message: string
+}
+
+/** @interface */
+export interface GetMyProfileResonse {
+  profile: IProfile
+}
+
+/** @interface */
+export interface GetProfileParams {
+  id: string
+}
+
+/** @interface */
+export interface GetProfileResponse {
+  profile: IProfile
+}
+
+/** @interface */
+export interface UpdateMyProfileRequest {
+  name?: string
+  avatarUrl?: string
+}
+
+/** @interface */
+export interface UpdateMyProfileResponse {
+  profile: IProfile
+}
+
+/** @interface */
+export interface GetAllProfilesParams {
+  page: number
+  limit: number
+  status?: ProfileStatus
+}
+
+/** @interface */
+export interface GetAllProfilesResponse {
+  data: IProfile[]
+  total: number
+}
+
+/** @interface */
+export interface ApproveProfileResponse {
+  profile: IProfile
+}
+
+/** @interface */
+export interface RejectProfileResponse {
+  profile: IProfile
+}
+
+/** @interface */
+export interface SuspendProfileResponse {
+  profile: IProfile
+}
+
+/** @interface */
+export interface PublicSearchProfilesParams {
+  searchText?: string
+  page?: number
+  limit?: number
+}
+
+/** @interface */
+export interface AdminSearchProfilesParams {
+  searchText?: string
+  page?: number
+  limit?: number
+  status?: ProfileStatus
+  role?: Role
+}
+
+/** @interface */
+export interface AdminSearchProfilesResponse {
+  data: IProfile[]
+  total: number
+}
+
+/** @interface */
+export interface PublicSearchProfilesResponse {
+  data: {
+    _id: string
+    name: string
+    avatarUrl: string
+  }[]
+  total: number
+}
+
+/** @interface */
+export interface AssignManagerRequest {
+  managerId: string
+  employeeId: string
+}
+
+/** @interface */
+export interface AssignManagerResponse {
+  managerId: string
+  employeeId: string
+  manager: IProfile
+  employee: IProfile
+}
+
+/** @interface */
+export interface GetUserManagementsParams {
+  page: number
+  limit: number
+}
+
+/** @interface */
+export interface GetUserManagementsResponse {
+  data: {
+    _id: string
+    manager: {
+      _id: string
+      name?: string
+      avatarUrl?: string
+    }
+    employee: {
+      _id: string
+      name?: string
+      avatarUrl?: string
+    }
+    createdAt: Date
+  }[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+/** @interface */
+export interface GetManagerOfEmployeeReponse {
+  manager: {
+    _id: string
+    name?: string
+    avatarUrl?: string
+  } | null
+}
+
+/** @interface */
+export interface GetEmployeesOfManagerResponse {
+  data: {
+    _id: string
+    name?: string
+    avatarUrl?: string
+    assignedAt: Date
+  }[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+/** @interface */
+export interface RemoveManagementRequest {
+  managerId: string
+  employeeId: string
+}
+
+/** @interface */
+export interface RemoveManagementResponse {
+  message: string
 }

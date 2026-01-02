@@ -7,7 +7,9 @@ import {
   IconUser,
   IconTags,
   IconCalendarRepeat,
-  IconChartBar
+  IconChartBar,
+  IconUserCog,
+  IconClockQuestion
 } from "@tabler/icons-react"
 import type { IconComponent } from "./sidebar-item"
 import type { Role } from "../../constants/role"
@@ -69,13 +71,20 @@ export const subMenus: Record<SectionKey, MenuItem[]> = {
     {
       label: "Yêu cầu cá nhân",
       to: "/time-tracking/requests",
-      icon: IconClockHour4
+      icon: IconClockHour4,
+      allowedRoles: ["user"]
     },
     {
       label: "Quản lý yêu cầu",
       to: "/time-tracking/manage-requests",
       icon: IconListCheck,
       allowedRoles: ["superadmin", "admin"]
+    },
+    {
+      label: "Yêu cầu đang chờ",
+      to: "/time-tracking/pending-review",
+      icon: IconClockQuestion,
+      allowedRoles: ["admin", "user"]
     },
     {
       label: "Timesheet",
@@ -89,30 +98,50 @@ export const subMenus: Record<SectionKey, MenuItem[]> = {
       to: "/management/users",
       icon: IconUser,
       allowedRoles: ["superadmin"]
+    },
+    {
+      label: "Quản lý Manager",
+      to: "/management/user-management",
+      icon: IconUserCog,
+      allowedRoles: ["superadmin", "admin"]
     }
   ]
 }
 
-export function isAllowed(item: MenuItem, role?: Role) {
+export function isAllowed(
+  item: MenuItem,
+  role?: Role,
+  roles?: Role[]
+): boolean {
   if (!item.allowedRoles || item.allowedRoles.length === 0) return true
+  if (!roles && !role) return false
+
+  // Nếu có roles array, kiểm tra xem có role nào khớp không
+  if (roles && roles.length > 0) {
+    return item.allowedRoles.some((allowedRole) => roles.includes(allowedRole))
+  }
+
+  // Fallback: check single role
   if (!role) return false
   return item.allowedRoles.includes(role)
 }
 
-export function getVisibleNavItems(role?: Role): MenuItem[] {
-  return navItems.filter((i) => isAllowed(i, role))
+export function getVisibleNavItems(role?: Role, roles?: Role[]): MenuItem[] {
+  return navItems.filter((i) => isAllowed(i, role, roles))
 }
 
 export function getVisibleSubMenu(
   section: SectionKey,
-  role?: Role
+  role?: Role,
+  roles?: Role[]
 ): MenuItem[] {
-  return (subMenus[section] ?? []).filter((i) => isAllowed(i, role))
+  return (subMenus[section] ?? []).filter((i) => isAllowed(i, role, roles))
 }
 
 export function getFirstSubMenuPath(
   section: SectionKey,
-  role?: Role
+  role?: Role,
+  roles?: Role[]
 ): string | undefined {
-  return getVisibleSubMenu(section, role)[0]?.to
+  return getVisibleSubMenu(section, role, roles)[0]?.to
 }

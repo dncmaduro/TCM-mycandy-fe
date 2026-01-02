@@ -8,13 +8,14 @@ import {
   Textarea,
   TextInput,
   Text,
-  Badge
+  Badge,
+  NumberInput
 } from "@mantine/core"
 import { DateTimePicker } from "@mantine/dates"
 import { modals } from "@mantine/modals"
 import { Controller, useFormContext } from "react-hook-form"
 import { CreateTaskRequest } from "../../types/models"
-import { useUsers } from "../../hooks/use-users"
+import { useProfile } from "../../hooks/use-profile"
 import { useTaskTags } from "../../hooks/use-task-tags"
 import { useSprints } from "../../hooks/use-sprints"
 import { useQuery } from "@tanstack/react-query"
@@ -35,20 +36,24 @@ export const TaskModal = ({ task }: TaskModalProps) => {
         title: task.title,
         description: task.description || "",
         priority: task.priority,
+        aim: task.aim,
+        aimUnit: task.aimUnit,
         dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
-        assignedTo: task.assignedTo || undefined,
+        assignedTo: task.assignedTo?._id || undefined,
         tags: task.tags || [],
-        sprint: task.sprint || ""
+        sprint: task.sprint._id || "",
+        estimateHours: task.estimateHours || 0,
+        evaluation: task.evaluation || ""
       })
     }
   }, [task])
-  const { publicSearchUsers } = useUsers()
+  const { getAllProfiles } = useProfile()
   const { searchTaskTags } = useTaskTags()
   const { getSprints } = useSprints()
 
-  const { data: usersData } = useQuery({
-    queryKey: ["public-users"],
-    queryFn: () => publicSearchUsers({ limit: 300, page: 1 }),
+  const { data: profilesData } = useQuery({
+    queryKey: ["all-profiles"],
+    queryFn: () => getAllProfiles({ page: 1, limit: 300, status: "active" }),
     staleTime: Infinity
   })
 
@@ -87,23 +92,25 @@ export const TaskModal = ({ task }: TaskModalProps) => {
 
   const usersOptions = useMemo(() => {
     return (
-      usersData?.data.data.map((user) => ({
-        value: user._id,
-        label: user.name || user.email || "No name"
+      profilesData?.data.data.map((profile) => ({
+        value: profile._id,
+        label: profile.name ?? profile.accountId
       })) || []
     )
-  }, [usersData])
+  }, [profilesData])
 
   const renderOption: SelectProps["renderOption"] = ({ option, checked }) => {
-    const user = usersData?.data.data.find((u) => u._id === option.value)
-    if (!user) return option.label
+    const profile = profilesData?.data.data.find(
+      (p) => p.accountId === option.value
+    )
+    if (!profile) return option.label
     return (
       <Group gap="sm">
-        <Avatar src={user.avatarUrl} radius="xl" size={20} />
+        <Avatar src={profile.avatarUrl} radius="xl" size={20} />
         <Stack gap={0}>
           <Text>{option.label}</Text>
           <Text size="xs" c="dimmed">
-            {user.email}
+            {profile.accountId}
           </Text>
         </Stack>
         {checked && <IconCheck size={16} />}
@@ -193,6 +200,53 @@ export const TaskModal = ({ task }: TaskModalProps) => {
           )}
         />
 
+        <Group grow>
+          <Controller
+            name="aim"
+            control={form.control}
+            rules={{
+              required: "Mục tiêu là bắt buộc",
+              min: { value: 1, message: "Mục tiêu phải lớn hơn 0" }
+            }}
+            render={({ field }) => (
+              <NumberInput
+                label="Mục tiêu"
+                placeholder="Nhập số lượng mục tiêu"
+                min={1}
+                {...field}
+                onChange={(value) => field.onChange(value)}
+                required
+              />
+            )}
+          />
+
+          <Controller
+            name="aimUnit"
+            control={form.control}
+            render={({ field }) => (
+              <TextInput
+                label="Đơn vị"
+                placeholder="VD: videos, bugs, pages..."
+                {...field}
+              />
+            )}
+          />
+        </Group>
+
+        <Controller
+          name="estimateHours"
+          control={form.control}
+          render={({ field }) => (
+            <NumberInput
+              label="Ước lượng thời gian (giờ)"
+              placeholder="Nhập số giờ"
+              min={0}
+              {...field}
+              onChange={(value) => field.onChange(value)}
+            />
+          )}
+        />
+
         <Controller
           name="dueDate"
           control={form.control}
@@ -252,6 +306,20 @@ export const TaskModal = ({ task }: TaskModalProps) => {
               tags={activeTags}
               value={field.value || []}
               onChange={field.onChange}
+            />
+          )}
+        />
+
+        <Controller
+          name="evaluation"
+          control={form.control}
+          render={({ field }) => (
+            <Textarea
+              label="Đánh giá"
+              placeholder="Nhập đánh giá"
+              minRows={3}
+              autosize
+              {...field}
             />
           )}
         />

@@ -13,8 +13,6 @@ export const TaskTagsDisplay = ({
   tagNames,
   maxVisible = 2
 }: TaskTagsDisplayProps) => {
-  if (!tagNames || tagNames.length === 0) return null
-
   const { searchTaskTags } = useTaskTags()
 
   const { data: allTags } = useQuery({
@@ -28,22 +26,32 @@ export const TaskTagsDisplay = ({
   })
 
   const matchedTags = useMemo(() => {
-    if (!allTags) return []
+    if (!allTags || !tagNames || tagNames.length === 0) return []
 
     return tagNames
       .map((name) => (allTags || []).find((tag) => tag.name === name))
       .filter((tag): tag is ITaskTags => tag !== undefined)
   }, [tagNames, allTags])
 
-  const visibleTags = matchedTags.slice(0, maxVisible)
-  const hiddenCount = matchedTags.length - maxVisible
+  const visibleTags = useMemo(
+    () => matchedTags.slice(0, maxVisible),
+    [matchedTags, maxVisible]
+  )
+  const hiddenCount = useMemo(
+    () => Math.max(0, matchedTags.length - maxVisible),
+    [matchedTags.length, maxVisible]
+  )
+
+  if (!tagNames || tagNames.length === 0 || matchedTags.length === 0) {
+    return null
+  }
 
   return (
     <Group gap="xs">
       {visibleTags.map((tag) => (
         <Pill
           size="xs"
-          key={tag.name}
+          key={`tag-${tag._id}`}
           style={{
             backgroundColor: tag.color,
             color: "#fff"
@@ -54,6 +62,8 @@ export const TaskTagsDisplay = ({
       ))}
       {hiddenCount > 0 && (
         <Pill
+          key="hidden-count"
+          size="xs"
           style={{
             backgroundColor: "#868e96",
             color: "#fff"

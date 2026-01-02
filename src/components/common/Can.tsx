@@ -19,11 +19,12 @@ export function Can({ roles, children, fallback = null }: CanProps) {
 
   if (isLoading) return <>{fallback}</>
 
-  const fetchedRole = data?.data.role as Role | undefined
+  const fetchedRoles = (data?.data.roles || []) as Role[]
 
+  // Kiểm tra xem user có ít nhất 1 role được phép không
   const allowed = Array.isArray(roles)
-    ? !!fetchedRole && roles.includes(fetchedRole)
-    : fetchedRole === roles
+    ? fetchedRoles.some((userRole) => roles.includes(userRole))
+    : fetchedRoles.includes(roles)
 
   return <>{allowed ? children : fallback}</>
 }

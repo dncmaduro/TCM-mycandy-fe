@@ -1,7 +1,13 @@
 import { Button, Group } from "@mantine/core"
 import { IconBrandGoogle } from "@tabler/icons-react"
 
-export const LoginWithGoogleButton = () => {
+interface LoginWithGoogleButtonProps {
+  isRegister?: boolean
+}
+
+export const LoginWithGoogleButton = ({
+  isRegister = false
+}: LoginWithGoogleButtonProps) => {
   const handleLoginWithGoogle = () => {
     const params = new URLSearchParams({
       client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
@@ -42,7 +48,7 @@ export const LoginWithGoogleButton = () => {
       }}
     >
       <Group gap="sm" justify="center">
-        Đăng nhập với Google
+        {isRegister ? "Đăng ký với Google" : "Đăng nhập với Google"}
       </Group>
     </Button>
   )

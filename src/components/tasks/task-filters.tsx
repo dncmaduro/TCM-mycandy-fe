@@ -13,7 +13,7 @@ import {
 } from "@mantine/core"
 import { DateInput } from "@mantine/dates"
 import { IconFilter, IconX, IconSearch } from "@tabler/icons-react"
-import type { TaskPriority, TaskStatus } from "../../types/interfaces"
+import type { TaskPriority } from "../../types/interfaces"
 import type { SearchTasksParams } from "../../types/models"
 
 export interface TaskFiltersProps {
@@ -21,15 +21,13 @@ export interface TaskFiltersProps {
   users: Array<{ _id: string; name: string }>
   sprints?: Array<{ _id: string; name: string }>
   initialFilters?: Omit<SearchTasksParams, "page" | "limit">
-  view: "kanban" | "list"
 }
 
 export function TaskFilters({
   onFiltersChange,
   users,
   sprints = [],
-  initialFilters = {},
-  view
+  initialFilters = {}
 }: TaskFiltersProps) {
   const [opened, setOpened] = useState(false)
   const [filters, setFilters] =
@@ -152,20 +150,6 @@ export function TaskFilters({
               clearable
               searchable
             />
-
-            {/* Status */}
-            {view === "list" && (
-              <Select
-                label="Trạng thái"
-                placeholder="Chọn trạng thái"
-                data={statusOptions}
-                value={filters.status || null}
-                onChange={(value) =>
-                  updateFilter("status", value as TaskStatus)
-                }
-                clearable
-              />
-            )}
 
             {/* Priority */}
             <Select

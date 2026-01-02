@@ -13,7 +13,7 @@ interface AuthLayoutProps {
  */
 export function AuthLayout({
   children,
-  maxWidth = 400,
+  maxWidth = 500,
   paperProps
 }: AuthLayoutProps) {
   return (
