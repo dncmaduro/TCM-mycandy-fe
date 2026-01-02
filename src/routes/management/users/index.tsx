@@ -2,10 +2,10 @@ import { createFileRoute } from "@tanstack/react-router"
 import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import { AppLayout } from "../../../components/layouts/app-layout"
 import { DataTable } from "../../../components/common/data-table"
-import { useUsers } from "../../../hooks/use-users"
+import { useProfile } from "../../../hooks/use-profile"
 import { useState, useMemo } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
-import type { IUser } from "../../../types/interfaces"
+import type { IProfile, ProfileStatus } from "../../../types/interfaces"
 import {
   Avatar,
   Badge,
@@ -16,32 +16,38 @@ import {
   Button
 } from "@mantine/core"
 import { IconSearch } from "@tabler/icons-react"
-import type { SearchUsersResponse } from "../../../types/models"
+import type { AdminSearchProfilesResponse } from "../../../types/models"
 import { useDebouncedValue } from "@mantine/hooks"
+import { type Role, ROLE_OPTIONS } from "../../../constants/role"
 
 export const Route = createFileRoute("/management/users/")({
   component: RouteComponent
 })
 
 function RouteComponent() {
-  const { searchUsers } = useUsers()
+  const { adminSearchProfiles } = useProfile()
 
   const navigate = Route.useNavigate()
 
   const [page, setPage] = useState(1)
   const limit = 10
   const [searchText, setSearchText] = useState("")
-  const [role, setRole] = useState<string | undefined>(undefined)
+  const [role, setRole] = useState<Role | undefined>(undefined)
+  const [status, setStatus] = useState<ProfileStatus | undefined>(undefined)
   const [debouncedSearch] = useDebouncedValue(searchText, 400)
 
-  const { data, isLoading } = useQuery<SearchUsersResponse>({
-    queryKey: ["users", { page, limit, searchText: debouncedSearch, role }],
+  const { data, isLoading } = useQuery<AdminSearchProfilesResponse>({
+    queryKey: [
+      "admin-profiles",
+      { page, limit, searchText: debouncedSearch, role, status }
+    ],
     queryFn: async () => {
-      const resp = await searchUsers({
+      const resp = await adminSearchProfiles({
         page,
         limit,
         searchText: debouncedSearch,
-        role
+        role,
+        status
       })
       return resp.data
     },
@@ -49,9 +55,10 @@ function RouteComponent() {
   })
 
   const rows = data?.data ?? []
-  const totalPages = data?.totalPages ?? 1
+  const total = data?.total ?? 0
+  const totalPages = Math.ceil(total / limit)
 
-  const columns = useMemo<ColumnDef<IUser, unknown>[]>(
+  const columns = useMemo<ColumnDef<IProfile, unknown>[]>(
     () => [
       {
         header: "Người dùng",
@@ -60,9 +67,9 @@ function RouteComponent() {
           <Group gap="sm">
             <Avatar size={28} radius="xl" src={row.original.avatarUrl} />
             <div>
-              <Text fw={600}>{row.original.name ?? row.original.email}</Text>
+              <Text fw={600}>{row.original.name || "Chưa có tên"}</Text>
               <Text size="xs" c="dimmed">
-                {row.original.email}
+                ID: {row.original._id}
               </Text>
             </div>
           </Group>
@@ -72,14 +79,13 @@ function RouteComponent() {
         header: "Trạng thái",
         accessorKey: "status",
         cell: ({ getValue }) => {
-          const v = getValue() as IUser["status"]
-          const map: Record<IUser["status"], { color: string; label: string }> =
-            {
-              pending: { color: "yellow", label: "Chờ duyệt" },
-              active: { color: "green", label: "Hoạt động" },
-              rejected: { color: "red", label: "Từ chối" },
-              suspended: { color: "gray", label: "Tạm khóa" }
-            }
+          const v = getValue() as ProfileStatus
+          const map: Record<ProfileStatus, { color: string; label: string }> = {
+            pending: { color: "yellow", label: "Chờ duyệt" },
+            active: { color: "green", label: "Hoạt động" },
+            rejected: { color: "red", label: "Từ chối" },
+            suspended: { color: "gray", label: "Tạm khóa" }
+          }
           const m = map[v]
           return (
             <Badge color={m.color} variant="light">
@@ -120,7 +126,7 @@ function RouteComponent() {
 
   return (
     <AppLayout>
-      <DataTable<IUser, unknown>
+      <DataTable<IProfile, unknown>
         columns={columns}
         data={rows}
         initialPageSize={limit}
@@ -142,15 +148,29 @@ function RouteComponent() {
             />
             <Select
               placeholder="Chọn role"
-              data={[
-                { value: "user", label: "User" },
-                { value: "admin", label: "Admin" },
-                { value: "superadmin", label: "Super Admin" }
-              ]}
+              data={ROLE_OPTIONS.map((opt) => ({
+                value: opt.value,
+                label: opt.label
+              }))}
               value={role}
               onChange={(v) => {
                 setPage(1)
-                setRole(v ?? undefined)
+                setRole((v as Role) ?? undefined)
+              }}
+              clearable
+            />
+            <Select
+              placeholder="Chọn trạng thái"
+              data={[
+                { value: "pending", label: "Chờ duyệt" },
+                { value: "active", label: "Hoạt động" },
+                { value: "rejected", label: "Từ chối" },
+                { value: "suspended", label: "Tạm khóa" }
+              ]}
+              value={status}
+              onChange={(v) => {
+                setPage(1)
+                setStatus((v as ProfileStatus) ?? undefined)
               }}
               clearable
             />
@@ -158,7 +178,7 @@ function RouteComponent() {
         }
         extraActions={
           <Text c="dimmed" size="sm">
-            {isLoading ? "Đang tải..." : `${rows.length} kết quả`}
+            {isLoading ? "Đang tải..." : `${rows.length} / ${total} kết quả`}
           </Text>
         }
       />

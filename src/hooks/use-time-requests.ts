@@ -9,12 +9,13 @@ import {
   GetOwnTimeRequestByMonthResponse,
   GetOwnTimeRequestsParams,
   GetOwnTimeRequestsResponse,
+  GetPendingReviewRequestsParams,
   GetTimeRequestResponse,
   RejectTimeRequestResponse,
   UpdateTimeRequestRequest,
   UpdateTimeRequestResponse
 } from "../types/models"
-import { callApi } from "../utils/axios"
+import { callApi, toQueryString } from "../utils/axios"
 
 export const useTimeRequests = () => {
   const accessToken = useAuthStore((s) => s.accessToken)
@@ -100,6 +101,18 @@ export const useTimeRequests = () => {
     })
   }
 
+  const getPendingTimeRequests = async (
+    params: GetPendingReviewRequestsParams
+  ) => {
+    const query = toQueryString(params)
+
+    return callApi<never, GetAllTimeRequestsResponse>({
+      method: "GET",
+      path: `/time-requests/pending-review?${query}`,
+      token: accessToken || undefined
+    })
+  }
+
   return {
     createTimeRequest,
     updateTimeRequest,
@@ -109,6 +122,7 @@ export const useTimeRequests = () => {
     rejectTimeRequest,
     deleteTimeRequest,
     getTimeRequest,
-    getOwnTimeRequestsByMonth
+    getOwnTimeRequestsByMonth,
+    getPendingTimeRequests
   }
 }

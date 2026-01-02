@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useEffect } from "react"
 import { useEnsureAuth } from "../../hooks/use-ensure-auth"
-import { useUsers } from "../../hooks/use-users"
+import { useProfile } from "../../hooks/use-profile"
 import { useAuthStore } from "../../stores/authState"
 import { useQuery } from "@tanstack/react-query"
 import { AuthLayout } from "../../components/layouts/auth-layout"
@@ -28,15 +28,15 @@ export const Route = createFileRoute("/account/")({
 
 function RouteComponent() {
   useEnsureAuth({ redirectTo: "/" })
-  const { getMe } = useUsers()
+  const { getMyProfile } = useProfile()
   const navigate = Route.useNavigate()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated())
   const clearAuth = useAuthStore((s) => s.clearAuth)
 
   const { data, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ["me"],
-    queryFn: getMe,
-    select: (res) => res.data.user,
+    queryKey: ["myProfile"],
+    queryFn: getMyProfile,
+    select: (res) => res.data.profile,
     staleTime: 30_000
   })
 

@@ -7,11 +7,11 @@ import {
   ScrollArea
 } from "@mantine/core"
 import { useTasks } from "../../hooks/use-tasks"
-import { useUsers } from "../../hooks/use-users"
 import { useQuery } from "@tanstack/react-query"
 import { IconEye } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import type { ITaskLog } from "../../types/interfaces"
+import { useProfile } from "../../hooks/use-profile"
 
 interface TaskLogsProps {
   taskId: string
@@ -19,7 +19,7 @@ interface TaskLogsProps {
 
 export function TaskLogs({ taskId }: TaskLogsProps) {
   const { searchTaskLogs } = useTasks()
-  const { getUser } = useUsers()
+  const { publicSearchProfiles } = useProfile()
 
   const { data: logsData, isLoading } = useQuery({
     queryKey: ["task-logs", taskId],
@@ -28,33 +28,18 @@ export function TaskLogs({ taskId }: TaskLogsProps) {
     gcTime: 0
   })
 
-  const logs: ITaskLog[] = logsData?.data?.data || []
-  const userIds = [...new Set(logs.map((log) => log.userId))]
-
-  const { data: usersData } = useQuery({
-    queryKey: ["task-logs-users", ...userIds],
-    queryFn: async () => {
-      const users = await Promise.all(
-        userIds.map(async (userId) => {
-          try {
-            const response = await getUser(userId)
-            return { userId, user: response.data.user }
-          } catch {
-            return { userId, user: null }
-          }
-        })
-      )
-      return users.reduce(
-        (map, item) => {
-          map[item.userId] = item.user
-          return map
-        },
-        {} as Record<string, any>
-      )
-    },
-    enabled: userIds.length > 0,
-    staleTime: Infinity
+  const { data: profilesData } = useQuery({
+    queryKey: ["public-search-profiles"],
+    queryFn: () => publicSearchProfiles({ limit: 999, page: 1 }),
+    staleTime: Infinity,
+    select: (data) => {
+      return data.data.data
+        .map((user) => ({ [user._id]: user }))
+        .reduce((acc, curr) => ({ ...acc, ...curr }), {})
+    }
   })
+
+  const logs: ITaskLog[] = logsData?.data?.data || []
 
   const formatLogMessage = (log: ITaskLog) => {
     const { type, meta } = log
@@ -109,11 +94,16 @@ export function TaskLogs({ taskId }: TaskLogsProps) {
 
       case "assignment":
         return meta?.assignedTo
-          ? `đã giao task cho ${meta.assignedTo}`
+          ? `đã giao task cho ${meta.assignedTo.name}`
           : "đã giao task"
 
       case "comment":
         return "đã bình luận"
+
+      case "sprint_change":
+        return meta?.newSprint
+          ? `đã chuyển task vào sprint "${meta.newSprint.name}"`
+          : "đã chuyển task vào sprint khác"
 
       default:
         return `đã thực hiện hành động: ${type}`
@@ -140,7 +130,7 @@ export function TaskLogs({ taskId }: TaskLogsProps) {
     <ScrollArea.Autosize style={{ maxHeight: 300 }}>
       <Stack gap="md">
         {logs.map((log) => {
-          const user = usersData?.[log.userId]
+          const user = profilesData?.[log.userId ? log.userId._id : ""]
           return (
             <Group key={log._id} align="flex-start" wrap="nowrap" gap="sm">
               <Avatar
@@ -152,7 +142,7 @@ export function TaskLogs({ taskId }: TaskLogsProps) {
               <Stack gap={2} style={{ flex: 1 }}>
                 <Group gap="xs" wrap="nowrap">
                   <Text size="sm" fw={500}>
-                    {user?.name || user?.email || "Unknown User"}
+                    {user?.name || "Unknown User"}
                   </Text>
                   <Text size="sm" c="dimmed">
                     {formatLogMessage(log)}

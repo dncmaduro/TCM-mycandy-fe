@@ -13,15 +13,22 @@ export const Route = createFileRoute("/management/")({
 function RouteComponent() {
   const navigate = useNavigate()
   const { getOwnRole } = useRoles()
-  const { data: role } = useQuery({
+  const { data: roleData } = useQuery({
     queryKey: ["own-role"],
     queryFn: getOwnRole,
-    staleTime: Infinity,
-    select: (data) => data.data.role
+    staleTime: Infinity
   })
+
+  const roles = (roleData?.data.roles || []) as Role[]
+  const role = roles.includes("superadmin")
+    ? "superadmin"
+    : roles.includes("admin")
+      ? "admin"
+      : "user"
+
   useEffect(() => {
-    const first = getFirstSubMenuPath("/management", role as Role)
+    const first = getFirstSubMenuPath("/management", role, roles)
     if (first) navigate({ to: first, replace: true })
-  }, [navigate, role])
+  }, [navigate, role, roles])
   return <AppLayout />
 }

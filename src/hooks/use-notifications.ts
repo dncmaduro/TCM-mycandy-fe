@@ -30,7 +30,7 @@ export const useNotifications = () => {
 
   const setNotificationRead = async (notificationId: string) => {
     return callApi<never, SetNotificationReadResponse>({
-      method: "POST",
+      method: "PATCH",
       path: `/notifications/${notificationId}/read`,
       token: accessToken || undefined
     })
@@ -38,7 +38,7 @@ export const useNotifications = () => {
 
   const setNotificationUnread = async (notificationId: string) => {
     return callApi<never, SetNotificationUnreadResponse>({
-      method: "POST",
+      method: "PATCH",
       path: `/notifications/${notificationId}/unread`,
       token: accessToken || undefined
     })

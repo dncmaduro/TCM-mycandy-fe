@@ -10,7 +10,6 @@ import {
 } from "@mantine/core"
 import { ITask } from "../../types/interfaces"
 import { useUsers } from "../../hooks/use-users"
-import { useSprints } from "../../hooks/use-sprints"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { IconPencil } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
@@ -28,38 +27,21 @@ interface TaskDetailProps {
 
 export const TaskDetail = ({ task }: TaskDetailProps) => {
   const { getUser } = useUsers()
-  const { getSprint } = useSprints()
   const { updateTask } = useTasks()
   const qc = useQueryClient()
 
   const { data: userData } = useQuery({
     queryKey: ["user", task.assignedTo],
-    queryFn: () => getUser(task.assignedTo || ""),
+    queryFn: () => getUser(task.assignedTo?._id || ""),
     enabled: !!task.assignedTo,
     staleTime: Infinity
   })
 
   const { data: createdByData } = useQuery({
     queryKey: ["user", task.createdBy],
-    queryFn: () => getUser(task.createdBy),
+    queryFn: () => getUser(task.createdBy._id),
     staleTime: Infinity
   })
-
-  const { data: sprintData } = useQuery({
-    queryKey: ["sprint", task.sprint],
-    queryFn: () => getSprint(task.sprint),
-    enabled: !!task.sprint,
-    staleTime: Infinity
-  })
-
-  const statusStyles = {
-    new: { color: "blue", label: "Mới" },
-    in_progress: { color: "yellow", label: "Đang làm" },
-    completed: { color: "green", label: "Hoàn thành" },
-    archived: { color: "gray", label: "Lưu trữ" },
-    canceled: { color: "red", label: "Hủy" },
-    reviewing: { color: "orange", label: "Đang review" }
-  }
 
   const priorityStyles = {
     low: { color: "gray", label: "Thấp" },
@@ -74,9 +56,9 @@ export const TaskDetail = ({ task }: TaskDetailProps) => {
       description: task.description || "",
       priority: task.priority,
       dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
-      assignedTo: task.assignedTo || undefined,
+      assignedTo: task.assignedTo?._id || undefined,
       tags: task.tags || [],
-      sprint: task.sprint || undefined
+      sprint: task.sprint._id || undefined
     }
   })
 
@@ -96,7 +78,6 @@ export const TaskDetail = ({ task }: TaskDetailProps) => {
         color: "green"
       })
       qc.invalidateQueries({ queryKey: ["tasks-weekly"] })
-      qc.invalidateQueries({ queryKey: ["kanban-tasks"] })
       qc.invalidateQueries({ queryKey: ["task-logs", task._id] })
     },
     onError: (error) => {
@@ -136,18 +117,6 @@ export const TaskDetail = ({ task }: TaskDetailProps) => {
       )}
 
       <Group grow>
-        <div>
-          <Text size="sm" fw={600} c="dimmed" mb={4}>
-            Trạng thái
-          </Text>
-          <Badge
-            color={statusStyles[task.status]?.color}
-            variant="dot"
-            size="lg"
-          >
-            {statusStyles[task.status]?.label}
-          </Badge>
-        </div>
         <div>
           <Text size="sm" fw={600} c="dimmed" mb={4}>
             Ưu tiên
@@ -226,7 +195,7 @@ export const TaskDetail = ({ task }: TaskDetailProps) => {
             Sprint
           </Text>
           <Badge variant="dot" color="violet" size="lg">
-            {sprintData?.data.sprint?.name || task.sprint}
+            {task.sprint.name}
           </Badge>
         </div>
       )}
@@ -271,17 +240,6 @@ export const TaskDetail = ({ task }: TaskDetailProps) => {
           </Text>
         </div>
       </Group>
-
-      {task.parentTaskId && (
-        <div>
-          <Text size="sm" fw={600} c="dimmed" mb={4}>
-            Task cha
-          </Text>
-          <Text size="sm" c="dimmed">
-            ID: {task.parentTaskId}
-          </Text>
-        </div>
-      )}
 
       <Divider />
 

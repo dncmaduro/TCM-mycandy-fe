@@ -3,27 +3,19 @@ import {
   AppShell,
   Burger,
   Group,
-  ActionIcon,
   Text,
   TextInput,
   Button,
   Menu,
   Avatar,
-  Indicator,
   Box,
-  Tooltip,
   Kbd,
   Stack,
   Paper
 } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { Link, useRouterState } from "@tanstack/react-router"
-import {
-  IconSearch,
-  IconBell,
-  IconLogout,
-  IconUserCircle
-} from "@tabler/icons-react"
+import { IconSearch, IconLogout, IconUserCircle } from "@tabler/icons-react"
 import { useEnsureAuth } from "../../hooks/use-ensure-auth"
 import { useAuth } from "../../hooks/use-auth"
 import { SidebarItem } from "../navigation/sidebar-item"
@@ -38,7 +30,8 @@ import {
 import { useRoles } from "../../hooks/use-roles"
 import { useQuery } from "@tanstack/react-query"
 import { Role } from "../../constants/role"
-import { useUsers } from "../../hooks/use-users"
+import { useProfile } from "../../hooks/use-profile"
+import { NotificationsPopover } from "../notifications/notifications-popover"
 
 interface AppLayoutProps {
   children?: ReactNode
@@ -51,26 +44,34 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [opened, { toggle }] = useDisclosure()
   const { logout } = useAuth()
   const { getOwnRole } = useRoles()
-  const { getMe } = useUsers()
+  const { getMyProfile } = useProfile()
   const { data: roleData } = useQuery({
     queryKey: ["own-role"],
     queryFn: () => getOwnRole(),
     staleTime: Infinity
   })
   const { data: meData } = useQuery({
-    queryKey: ["me"],
-    queryFn: () => getMe(),
+    queryKey: ["myProfile"],
+    queryFn: () => getMyProfile(),
     staleTime: Infinity
   })
-  const role = (roleData?.data.role || "user") as Role
+
+  // User có thể có nhiều roles, lấy role cao nhất
+  const roles = (roleData?.data.roles || ["user"]) as Role[]
+  const role = roles.includes("superadmin")
+    ? "superadmin"
+    : roles.includes("admin")
+      ? "admin"
+      : "user"
+
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
   const currentSection: SectionKey | undefined = SECTION_KEYS.find((k) =>
     pathname.startsWith(k)
   )
-  const visibleNav = getVisibleNavItems(role)
+  const visibleNav = getVisibleNavItems(role, roles)
   const currentSubmenu: MenuItem[] = currentSection
-    ? getVisibleSubMenu(currentSection, role)
+    ? getVisibleSubMenu(currentSection, role, roles)
     : []
 
   return (
@@ -135,24 +136,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           </Box>
 
           <Group wrap="nowrap" gap="xs">
-            <Tooltip label="Thông báo" withArrow>
-              <Indicator
-                position="top-end"
-                offset={8}
-                size={10}
-                color="red"
-                withBorder
-              >
-                <ActionIcon
-                  variant="subtle"
-                  aria-label="Notifications"
-                  radius="xl"
-                  size={36}
-                >
-                  <IconBell size={20} />
-                </ActionIcon>
-              </Indicator>
-            </Tooltip>
+            <NotificationsPopover />
 
             <Menu shadow="md" width={280} position="bottom-end">
               <Menu.Target>
@@ -165,17 +149,17 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <Avatar
                       radius="xl"
                       size={22}
-                      src={meData?.data.user.avatarUrl}
+                      src={meData?.data.profile.avatarUrl}
                     />
                   }
                   styles={() => ({ root: { paddingLeft: 6, paddingRight: 8 } })}
                 >
                   <Stack gap={0} align="flex-start">
                     <Text size="sm" fw={600} lh={1.1}>
-                      {meData?.data.user.name ?? "Tài khoản"}
+                      {meData?.data.profile.name ?? "Tài khoản"}
                     </Text>
                     <Text size="xs" c="dimmed" lh={1.1}>
-                      {meData?.data.user.email ?? ""}
+                      {meData?.data.profile.accountId ?? ""}
                     </Text>
                   </Stack>
                 </Button>

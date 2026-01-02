@@ -22,7 +22,8 @@ import {
   IconEye,
   IconTrash,
   IconRotateClockwise2,
-  IconStar
+  IconStar,
+  IconStarFilled
 } from "@tabler/icons-react"
 import { notifications } from "@mantine/notifications"
 import { modals } from "@mantine/modals"
@@ -44,14 +45,22 @@ function RouteComponent() {
     setCurrentSprint
   } = useSprints()
 
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
   const [deletedFilter, setDeletedFilter] = useState<
     "all" | "active" | "deleted"
   >("all")
 
   const { data, isLoading } = useQuery({
-    queryKey: ["sprints"],
+    queryKey: ["sprints", page, pageSize, deletedFilter],
     queryFn: async () => {
-      const resp = await getSprints({ limit: 100 })
+      const deleted =
+        deletedFilter === "all"
+          ? undefined
+          : deletedFilter === "deleted"
+            ? true
+            : false
+      const resp = await getSprints({ page, limit: pageSize, deleted })
       return resp.data
     },
     staleTime: Infinity
@@ -61,12 +70,9 @@ function RouteComponent() {
     return data?.data ?? []
   }, [data])
 
-  const filteredSprints = useMemo(() => {
-    if (deletedFilter === "all") return allSprints
-    if (deletedFilter === "deleted")
-      return allSprints.filter((s) => !!s.deletedAt)
-    return allSprints.filter((s) => !s.deletedAt)
-  }, [allSprints, deletedFilter])
+  const totalPages = useMemo(() => {
+    return Math.ceil((data?.total || 0) / pageSize)
+  }, [data?.total, pageSize])
 
   const { mutate: handleCreate } = useMutation({
     mutationFn: createSprint,
@@ -391,6 +397,21 @@ function RouteComponent() {
         }
       },
       {
+        header: "Sprint hiện tại",
+        accessorKey: "current",
+        cell: ({ row }) => {
+          return (
+            <>
+              {row.original.isCurrent ? (
+                <IconStarFilled className="text-center text-yellow-500" />
+              ) : (
+                <></>
+              )}
+            </>
+          )
+        }
+      },
+      {
         id: "actions",
         header: "Thao tác",
         cell: ({ row }) => {
@@ -459,15 +480,25 @@ function RouteComponent() {
 
         <DataTable<ISprint, unknown>
           columns={columns}
-          data={filteredSprints}
-          initialPageSize={10}
+          data={allSprints}
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize)
+            setPage(1)
+          }}
+          initialPageSize={pageSize}
           pageSizeOptions={[10, 20, 50, 100]}
           enableGlobalFilter={false}
           extraFilters={
             <Select
               placeholder="Trạng thái"
               value={deletedFilter}
-              onChange={(v) => setDeletedFilter((v as any) ?? "all")}
+              onChange={(v) => {
+                setDeletedFilter((v as any) ?? "all")
+                setPage(1)
+              }}
               data={[
                 { value: "all", label: "Tất cả" },
                 { value: "active", label: "Hoạt động" },
@@ -477,7 +508,7 @@ function RouteComponent() {
           }
           extraActions={
             <Text c="dimmed" size="sm">
-              {isLoading ? "Đang tải..." : `${filteredSprints.length} sprint`}
+              {isLoading ? "Đang tải..." : `${data?.total || 0} sprint`}
             </Text>
           }
         />

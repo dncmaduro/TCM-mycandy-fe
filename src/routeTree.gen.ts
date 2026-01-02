@@ -12,20 +12,27 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TimeTrackingIndexRouteImport } from './routes/time-tracking/index'
 import { Route as TasksIndexRouteImport } from './routes/tasks/index'
+import { Route as RolesIndexRouteImport } from './routes/roles/index'
+import { Route as ResetPasswordIndexRouteImport } from './routes/reset-password/index'
+import { Route as RegisterIndexRouteImport } from './routes/register/index'
 import { Route as ManagementIndexRouteImport } from './routes/management/index'
 import { Route as LegalIndexRouteImport } from './routes/legal/index'
 import { Route as HomeIndexRouteImport } from './routes/home/index'
+import { Route as ForgotPasswordIndexRouteImport } from './routes/forgot-password/index'
 import { Route as CallbackIndexRouteImport } from './routes/callback/index'
 import { Route as CalendarIndexRouteImport } from './routes/calendar/index'
 import { Route as AccountIndexRouteImport } from './routes/account/index'
+import { Route as TasksTaskIdRouteImport } from './routes/tasks/$taskId'
 import { Route as TimeTrackingTimesheetIndexRouteImport } from './routes/time-tracking/timesheet/index'
 import { Route as TimeTrackingRequestsIndexRouteImport } from './routes/time-tracking/requests/index'
+import { Route as TimeTrackingPendingReviewIndexRouteImport } from './routes/time-tracking/pending-review/index'
 import { Route as TimeTrackingManageRequestsIndexRouteImport } from './routes/time-tracking/manage-requests/index'
 import { Route as TasksWeeklyIndexRouteImport } from './routes/tasks/weekly/index'
 import { Route as TasksTagsIndexRouteImport } from './routes/tasks/tags/index'
 import { Route as TasksSprintsIndexRouteImport } from './routes/tasks/sprints/index'
 import { Route as TasksPerformanceIndexRouteImport } from './routes/tasks/performance/index'
 import { Route as ManagementUsersIndexRouteImport } from './routes/management/users/index'
+import { Route as ManagementUserManagementIndexRouteImport } from './routes/management/user-management/index'
 import { Route as CalendarMeetingsIndexRouteImport } from './routes/calendar/meetings/index'
 import { Route as ManagementUsersUserIdRouteImport } from './routes/management/users/$userId'
 
@@ -44,6 +51,21 @@ const TasksIndexRoute = TasksIndexRouteImport.update({
   path: '/tasks/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RolesIndexRoute = RolesIndexRouteImport.update({
+  id: '/roles/',
+  path: '/roles/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordIndexRoute = ResetPasswordIndexRouteImport.update({
+  id: '/reset-password/',
+  path: '/reset-password/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterIndexRoute = RegisterIndexRouteImport.update({
+  id: '/register/',
+  path: '/register/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ManagementIndexRoute = ManagementIndexRouteImport.update({
   id: '/management/',
   path: '/management/',
@@ -57,6 +79,11 @@ const LegalIndexRoute = LegalIndexRouteImport.update({
 const HomeIndexRoute = HomeIndexRouteImport.update({
   id: '/home/',
   path: '/home/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordIndexRoute = ForgotPasswordIndexRouteImport.update({
+  id: '/forgot-password/',
+  path: '/forgot-password/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CallbackIndexRoute = CallbackIndexRouteImport.update({
@@ -74,6 +101,11 @@ const AccountIndexRoute = AccountIndexRouteImport.update({
   path: '/account/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TasksTaskIdRoute = TasksTaskIdRouteImport.update({
+  id: '/tasks/$taskId',
+  path: '/tasks/$taskId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TimeTrackingTimesheetIndexRoute =
   TimeTrackingTimesheetIndexRouteImport.update({
     id: '/time-tracking/timesheet/',
@@ -84,6 +116,12 @@ const TimeTrackingRequestsIndexRoute =
   TimeTrackingRequestsIndexRouteImport.update({
     id: '/time-tracking/requests/',
     path: '/time-tracking/requests/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const TimeTrackingPendingReviewIndexRoute =
+  TimeTrackingPendingReviewIndexRouteImport.update({
+    id: '/time-tracking/pending-review/',
+    path: '/time-tracking/pending-review/',
     getParentRoute: () => rootRouteImport,
   } as any)
 const TimeTrackingManageRequestsIndexRoute =
@@ -117,6 +155,12 @@ const ManagementUsersIndexRoute = ManagementUsersIndexRouteImport.update({
   path: '/management/users/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ManagementUserManagementIndexRoute =
+  ManagementUserManagementIndexRouteImport.update({
+    id: '/management/user-management/',
+    path: '/management/user-management/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const CalendarMeetingsIndexRoute = CalendarMeetingsIndexRouteImport.update({
   id: '/calendar/meetings/',
   path: '/calendar/meetings/',
@@ -130,65 +174,86 @@ const ManagementUsersUserIdRoute = ManagementUsersUserIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/tasks/$taskId': typeof TasksTaskIdRoute
   '/account': typeof AccountIndexRoute
   '/calendar': typeof CalendarIndexRoute
   '/callback': typeof CallbackIndexRoute
+  '/forgot-password': typeof ForgotPasswordIndexRoute
   '/home': typeof HomeIndexRoute
   '/legal': typeof LegalIndexRoute
   '/management': typeof ManagementIndexRoute
+  '/register': typeof RegisterIndexRoute
+  '/reset-password': typeof ResetPasswordIndexRoute
+  '/roles': typeof RolesIndexRoute
   '/tasks': typeof TasksIndexRoute
   '/time-tracking': typeof TimeTrackingIndexRoute
   '/management/users/$userId': typeof ManagementUsersUserIdRoute
   '/calendar/meetings': typeof CalendarMeetingsIndexRoute
+  '/management/user-management': typeof ManagementUserManagementIndexRoute
   '/management/users': typeof ManagementUsersIndexRoute
   '/tasks/performance': typeof TasksPerformanceIndexRoute
   '/tasks/sprints': typeof TasksSprintsIndexRoute
   '/tasks/tags': typeof TasksTagsIndexRoute
   '/tasks/weekly': typeof TasksWeeklyIndexRoute
   '/time-tracking/manage-requests': typeof TimeTrackingManageRequestsIndexRoute
+  '/time-tracking/pending-review': typeof TimeTrackingPendingReviewIndexRoute
   '/time-tracking/requests': typeof TimeTrackingRequestsIndexRoute
   '/time-tracking/timesheet': typeof TimeTrackingTimesheetIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/tasks/$taskId': typeof TasksTaskIdRoute
   '/account': typeof AccountIndexRoute
   '/calendar': typeof CalendarIndexRoute
   '/callback': typeof CallbackIndexRoute
+  '/forgot-password': typeof ForgotPasswordIndexRoute
   '/home': typeof HomeIndexRoute
   '/legal': typeof LegalIndexRoute
   '/management': typeof ManagementIndexRoute
+  '/register': typeof RegisterIndexRoute
+  '/reset-password': typeof ResetPasswordIndexRoute
+  '/roles': typeof RolesIndexRoute
   '/tasks': typeof TasksIndexRoute
   '/time-tracking': typeof TimeTrackingIndexRoute
   '/management/users/$userId': typeof ManagementUsersUserIdRoute
   '/calendar/meetings': typeof CalendarMeetingsIndexRoute
+  '/management/user-management': typeof ManagementUserManagementIndexRoute
   '/management/users': typeof ManagementUsersIndexRoute
   '/tasks/performance': typeof TasksPerformanceIndexRoute
   '/tasks/sprints': typeof TasksSprintsIndexRoute
   '/tasks/tags': typeof TasksTagsIndexRoute
   '/tasks/weekly': typeof TasksWeeklyIndexRoute
   '/time-tracking/manage-requests': typeof TimeTrackingManageRequestsIndexRoute
+  '/time-tracking/pending-review': typeof TimeTrackingPendingReviewIndexRoute
   '/time-tracking/requests': typeof TimeTrackingRequestsIndexRoute
   '/time-tracking/timesheet': typeof TimeTrackingTimesheetIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/tasks/$taskId': typeof TasksTaskIdRoute
   '/account/': typeof AccountIndexRoute
   '/calendar/': typeof CalendarIndexRoute
   '/callback/': typeof CallbackIndexRoute
+  '/forgot-password/': typeof ForgotPasswordIndexRoute
   '/home/': typeof HomeIndexRoute
   '/legal/': typeof LegalIndexRoute
   '/management/': typeof ManagementIndexRoute
+  '/register/': typeof RegisterIndexRoute
+  '/reset-password/': typeof ResetPasswordIndexRoute
+  '/roles/': typeof RolesIndexRoute
   '/tasks/': typeof TasksIndexRoute
   '/time-tracking/': typeof TimeTrackingIndexRoute
   '/management/users/$userId': typeof ManagementUsersUserIdRoute
   '/calendar/meetings/': typeof CalendarMeetingsIndexRoute
+  '/management/user-management/': typeof ManagementUserManagementIndexRoute
   '/management/users/': typeof ManagementUsersIndexRoute
   '/tasks/performance/': typeof TasksPerformanceIndexRoute
   '/tasks/sprints/': typeof TasksSprintsIndexRoute
   '/tasks/tags/': typeof TasksTagsIndexRoute
   '/tasks/weekly/': typeof TasksWeeklyIndexRoute
   '/time-tracking/manage-requests/': typeof TimeTrackingManageRequestsIndexRoute
+  '/time-tracking/pending-review/': typeof TimeTrackingPendingReviewIndexRoute
   '/time-tracking/requests/': typeof TimeTrackingRequestsIndexRoute
   '/time-tracking/timesheet/': typeof TimeTrackingTimesheetIndexRoute
 }
@@ -196,86 +261,114 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/tasks/$taskId'
     | '/account'
     | '/calendar'
     | '/callback'
+    | '/forgot-password'
     | '/home'
     | '/legal'
     | '/management'
+    | '/register'
+    | '/reset-password'
+    | '/roles'
     | '/tasks'
     | '/time-tracking'
     | '/management/users/$userId'
     | '/calendar/meetings'
+    | '/management/user-management'
     | '/management/users'
     | '/tasks/performance'
     | '/tasks/sprints'
     | '/tasks/tags'
     | '/tasks/weekly'
     | '/time-tracking/manage-requests'
+    | '/time-tracking/pending-review'
     | '/time-tracking/requests'
     | '/time-tracking/timesheet'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/tasks/$taskId'
     | '/account'
     | '/calendar'
     | '/callback'
+    | '/forgot-password'
     | '/home'
     | '/legal'
     | '/management'
+    | '/register'
+    | '/reset-password'
+    | '/roles'
     | '/tasks'
     | '/time-tracking'
     | '/management/users/$userId'
     | '/calendar/meetings'
+    | '/management/user-management'
     | '/management/users'
     | '/tasks/performance'
     | '/tasks/sprints'
     | '/tasks/tags'
     | '/tasks/weekly'
     | '/time-tracking/manage-requests'
+    | '/time-tracking/pending-review'
     | '/time-tracking/requests'
     | '/time-tracking/timesheet'
   id:
     | '__root__'
     | '/'
+    | '/tasks/$taskId'
     | '/account/'
     | '/calendar/'
     | '/callback/'
+    | '/forgot-password/'
     | '/home/'
     | '/legal/'
     | '/management/'
+    | '/register/'
+    | '/reset-password/'
+    | '/roles/'
     | '/tasks/'
     | '/time-tracking/'
     | '/management/users/$userId'
     | '/calendar/meetings/'
+    | '/management/user-management/'
     | '/management/users/'
     | '/tasks/performance/'
     | '/tasks/sprints/'
     | '/tasks/tags/'
     | '/tasks/weekly/'
     | '/time-tracking/manage-requests/'
+    | '/time-tracking/pending-review/'
     | '/time-tracking/requests/'
     | '/time-tracking/timesheet/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  TasksTaskIdRoute: typeof TasksTaskIdRoute
   AccountIndexRoute: typeof AccountIndexRoute
   CalendarIndexRoute: typeof CalendarIndexRoute
   CallbackIndexRoute: typeof CallbackIndexRoute
+  ForgotPasswordIndexRoute: typeof ForgotPasswordIndexRoute
   HomeIndexRoute: typeof HomeIndexRoute
   LegalIndexRoute: typeof LegalIndexRoute
   ManagementIndexRoute: typeof ManagementIndexRoute
+  RegisterIndexRoute: typeof RegisterIndexRoute
+  ResetPasswordIndexRoute: typeof ResetPasswordIndexRoute
+  RolesIndexRoute: typeof RolesIndexRoute
   TasksIndexRoute: typeof TasksIndexRoute
   TimeTrackingIndexRoute: typeof TimeTrackingIndexRoute
   ManagementUsersUserIdRoute: typeof ManagementUsersUserIdRoute
   CalendarMeetingsIndexRoute: typeof CalendarMeetingsIndexRoute
+  ManagementUserManagementIndexRoute: typeof ManagementUserManagementIndexRoute
   ManagementUsersIndexRoute: typeof ManagementUsersIndexRoute
   TasksPerformanceIndexRoute: typeof TasksPerformanceIndexRoute
   TasksSprintsIndexRoute: typeof TasksSprintsIndexRoute
   TasksTagsIndexRoute: typeof TasksTagsIndexRoute
   TasksWeeklyIndexRoute: typeof TasksWeeklyIndexRoute
   TimeTrackingManageRequestsIndexRoute: typeof TimeTrackingManageRequestsIndexRoute
+  TimeTrackingPendingReviewIndexRoute: typeof TimeTrackingPendingReviewIndexRoute
   TimeTrackingRequestsIndexRoute: typeof TimeTrackingRequestsIndexRoute
   TimeTrackingTimesheetIndexRoute: typeof TimeTrackingTimesheetIndexRoute
 }
@@ -303,6 +396,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TasksIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/roles/': {
+      id: '/roles/'
+      path: '/roles'
+      fullPath: '/roles'
+      preLoaderRoute: typeof RolesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password/': {
+      id: '/reset-password/'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register/': {
+      id: '/register/'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/management/': {
       id: '/management/'
       path: '/management'
@@ -322,6 +436,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password/': {
+      id: '/forgot-password/'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/callback/': {
@@ -345,6 +466,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tasks/$taskId': {
+      id: '/tasks/$taskId'
+      path: '/tasks/$taskId'
+      fullPath: '/tasks/$taskId'
+      preLoaderRoute: typeof TasksTaskIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/time-tracking/timesheet/': {
       id: '/time-tracking/timesheet/'
       path: '/time-tracking/timesheet'
@@ -357,6 +485,13 @@ declare module '@tanstack/react-router' {
       path: '/time-tracking/requests'
       fullPath: '/time-tracking/requests'
       preLoaderRoute: typeof TimeTrackingRequestsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/time-tracking/pending-review/': {
+      id: '/time-tracking/pending-review/'
+      path: '/time-tracking/pending-review'
+      fullPath: '/time-tracking/pending-review'
+      preLoaderRoute: typeof TimeTrackingPendingReviewIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/time-tracking/manage-requests/': {
@@ -401,6 +536,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManagementUsersIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/management/user-management/': {
+      id: '/management/user-management/'
+      path: '/management/user-management'
+      fullPath: '/management/user-management'
+      preLoaderRoute: typeof ManagementUserManagementIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/calendar/meetings/': {
       id: '/calendar/meetings/'
       path: '/calendar/meetings'
@@ -420,22 +562,29 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  TasksTaskIdRoute: TasksTaskIdRoute,
   AccountIndexRoute: AccountIndexRoute,
   CalendarIndexRoute: CalendarIndexRoute,
   CallbackIndexRoute: CallbackIndexRoute,
+  ForgotPasswordIndexRoute: ForgotPasswordIndexRoute,
   HomeIndexRoute: HomeIndexRoute,
   LegalIndexRoute: LegalIndexRoute,
   ManagementIndexRoute: ManagementIndexRoute,
+  RegisterIndexRoute: RegisterIndexRoute,
+  ResetPasswordIndexRoute: ResetPasswordIndexRoute,
+  RolesIndexRoute: RolesIndexRoute,
   TasksIndexRoute: TasksIndexRoute,
   TimeTrackingIndexRoute: TimeTrackingIndexRoute,
   ManagementUsersUserIdRoute: ManagementUsersUserIdRoute,
   CalendarMeetingsIndexRoute: CalendarMeetingsIndexRoute,
+  ManagementUserManagementIndexRoute: ManagementUserManagementIndexRoute,
   ManagementUsersIndexRoute: ManagementUsersIndexRoute,
   TasksPerformanceIndexRoute: TasksPerformanceIndexRoute,
   TasksSprintsIndexRoute: TasksSprintsIndexRoute,
   TasksTagsIndexRoute: TasksTagsIndexRoute,
   TasksWeeklyIndexRoute: TasksWeeklyIndexRoute,
   TimeTrackingManageRequestsIndexRoute: TimeTrackingManageRequestsIndexRoute,
+  TimeTrackingPendingReviewIndexRoute: TimeTrackingPendingReviewIndexRoute,
   TimeTrackingRequestsIndexRoute: TimeTrackingRequestsIndexRoute,
   TimeTrackingTimesheetIndexRoute: TimeTrackingTimesheetIndexRoute,
 }

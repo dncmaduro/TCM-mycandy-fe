@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { AppLayout } from "../../../components/layouts/app-layout"
 import { DataTable } from "../../../components/common/data-table"
@@ -15,34 +15,30 @@ import {
   Stack,
   Title,
   Avatar,
-  SegmentedControl,
-  Divider,
   Alert,
   Paper,
-  Select
+  Select,
+  Progress,
+  Tooltip
 } from "@mantine/core"
 import {
   IconPlus,
-  IconEye,
   IconTrash,
-  IconTable,
-  IconLayoutKanban,
   IconArrowRight,
-  IconInfoCircle
+  IconInfoCircle,
+  IconChevronRight
 } from "@tabler/icons-react"
 import { notifications } from "@mantine/notifications"
 import { modals } from "@mantine/modals"
-import { TaskDetail } from "../../../components/tasks/task-detail"
 import { TaskModal } from "../../../components/tasks/task-modal"
 import { TaskFilters } from "../../../components/tasks/task-filters"
-import { KanbanBoard } from "../../../components/tasks/kanban/KanbanBoard"
 import { CreateTaskRequest, SearchTasksParams } from "../../../types/models"
 import { useForm, FormProvider } from "react-hook-form"
-import { useUsers } from "../../../hooks/use-users"
 import { useTaskTags } from "../../../hooks/use-task-tags"
 import { TaskTagsDisplay } from "../../../components/tasks/task-tags-display"
 import { useSprints } from "../../../hooks/use-sprints"
 import { Can } from "../../../components/common/Can"
+import { useProfile } from "../../../hooks/use-profile"
 
 export const Route = createFileRoute("/tasks/weekly/")({
   component: RouteComponent
@@ -115,9 +111,9 @@ function MoveToNewSprintModal({ onClose }: MoveToNewSprintModalProps) {
     <Stack gap="md">
       <Alert icon={<IconInfoCircle />} color="blue" variant="light">
         <Text size="sm">
-          <strong>Lưu ý:</strong> Các task có trạng thái "Mới", "Đang làm" và
-          "Đang review" sẽ được chuyển sang sprint mới. Các task "Hoàn thành",
-          "Hủy" và "Lưu trữ" sẽ giữ nguyên.
+          <strong>Lưu ý:</strong> Các task chưa hoàn thành (progress {"<"} aim)
+          sẽ được chuyển sang sprint mới. Các task đã hoàn thành (progress {">"}
+          = aim) sẽ giữ nguyên.
         </Text>
       </Alert>
 
@@ -126,48 +122,9 @@ function MoveToNewSprintModal({ onClose }: MoveToNewSprintModalProps) {
           <Title order={4} mb="sm">
             Sprint hiện tại: {currentSprint.name}
           </Title>
-          <Group grow>
-            <div>
-              <Text size="sm" c="dimmed">
-                Mới
-              </Text>
-              <Badge variant="light" color="blue" size="lg">
-                {currentStats.new}
-              </Badge>
-            </div>
-            <div>
-              <Text size="sm" c="dimmed">
-                Đang làm
-              </Text>
-              <Badge variant="light" color="yellow" size="lg">
-                {currentStats.in_progress}
-              </Badge>
-            </div>
-            <div>
-              <Text size="sm" c="dimmed">
-                Đang review
-              </Text>
-              <Badge variant="light" color="orange" size="lg">
-                {currentStats.reviewing}
-              </Badge>
-            </div>
-            <div>
-              <Text size="sm" c="dimmed">
-                Hoàn thành
-              </Text>
-              <Badge variant="light" color="teal" size="lg">
-                {currentStats.completed}
-              </Badge>
-            </div>
-            <div>
-              <Text size="sm" c="dimmed">
-                Tổng cộng
-              </Text>
-              <Badge variant="filled" color="gray" size="lg">
-                {currentStats.total}
-              </Badge>
-            </div>
-          </Group>
+          <Text size="sm" c="dimmed" mb="sm">
+            Tổng số task: {currentStats.total}
+          </Text>
         </Paper>
       )}
 
@@ -202,7 +159,13 @@ function MoveToNewSprintModal({ onClose }: MoveToNewSprintModalProps) {
 }
 
 function RouteComponent() {
-  const { searchTasks, deleteTask, createTask } = useTasks()
+  const {
+    searchTasks,
+    deleteTask,
+    createTask,
+    updateTask: updateTaskProgress
+  } = useTasks()
+  const { publicSearchProfiles } = useProfile()
   const { getSprints } = useSprints()
   const qc = useQueryClient()
   const [page, setPage] = useState(1)
@@ -210,12 +173,11 @@ function RouteComponent() {
   const [filters, setFilters] = useState<
     Omit<SearchTasksParams, "page" | "limit">
   >({})
-  const { publicSearchUsers } = useUsers()
   const { searchTaskTags } = useTaskTags()
 
-  const { data: usersData } = useQuery({
-    queryKey: ["public-users"],
-    queryFn: () => publicSearchUsers({ limit: 300, page: 1 }),
+  const { data: profilesData } = useQuery({
+    queryKey: ["public-profiles"],
+    queryFn: () => publicSearchProfiles({ limit: 300, page: 1 }),
     staleTime: Infinity
   })
 
@@ -248,16 +210,16 @@ function RouteComponent() {
     )
   }, [sprintsData])
 
-  const usersMap = useMemo(() => {
-    const list = usersData?.data?.data ?? []
+  const profilesMap = useMemo(() => {
+    const list = profilesData?.data?.data ?? []
     return new Map<string, { _id: string; name: string; avatarUrl?: string }>(
       list.map((u: any) => [u._id, u])
     )
-  }, [usersData])
+  }, [profilesData])
 
-  const usersList = useMemo(() => {
-    return usersData?.data?.data ?? []
-  }, [usersData])
+  const profilesList = useMemo(() => {
+    return profilesData?.data?.data ?? []
+  }, [profilesData])
 
   const sprintsList = useMemo(() => {
     return (sprintsData?.data ?? []).filter((s) => !s.deletedAt)
@@ -280,7 +242,7 @@ function RouteComponent() {
       })
       return resp.data
     },
-    enabled: !!usersData
+    enabled: !!profilesData
   })
 
   const { mutate: handleDelete } = useMutation({
@@ -306,7 +268,6 @@ function RouteComponent() {
     mutationFn: (payload: CreateTaskRequest) => createTask(payload),
     onSuccess: (response) => {
       qc.invalidateQueries({ queryKey: ["tasks-weekly"] })
-      qc.invalidateQueries({ queryKey: ["kanban-tasks"] })
       qc.invalidateQueries({ queryKey: ["task-logs", response.data.task._id] })
       notifications.show({
         title: "Thành công",
@@ -323,19 +284,35 @@ function RouteComponent() {
     }
   })
 
-  const openDetailModal = (task: ITask) => {
-    modals.open({
-      title: <b>Chi tiết Task</b>,
-      size: "xl",
-      children: <TaskDetail task={task} />
-    })
-  }
+  const { mutate: handleUpdateProgress } = useMutation({
+    mutationFn: (payload: { taskId: string; progress: number }) =>
+      updateTaskProgress(payload.taskId, { progress: payload.progress }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks-weekly"] })
+      notifications.show({
+        title: "Thành công",
+        message: "Đã cập nhật tiến độ task",
+        color: "green"
+      })
+    },
+    onError: (error) => {
+      notifications.show({
+        title: "Lỗi",
+        message: error.message || "Không thể cập nhật tiến độ task",
+        color: "red"
+      })
+    }
+  })
+
+  const navigate = useNavigate()
 
   const form = useForm<CreateTaskRequest>({
     defaultValues: {
       title: "",
       description: "",
       priority: "medium" as TaskPriority,
+      aim: 1,
+      aimUnit: "task",
       dueDate: undefined,
       assignedTo: "",
       tags: [],
@@ -350,6 +327,8 @@ function RouteComponent() {
           title: values.title,
           description: values.description || undefined,
           priority: values.priority,
+          aim: values.aim || 1,
+          aimUnit: values.aimUnit || "task",
           dueDate: values.dueDate ? new Date(values.dueDate) : undefined,
           assignedTo: values.assignedTo || undefined,
           tags: values.tags,
@@ -407,7 +386,11 @@ function RouteComponent() {
   }
 
   const rows = data?.data ?? []
-  const totalPages = data?.totalPages ?? 1
+  const totalPages = Math.ceil((data?.total || 0) / pageSize)
+
+  const handlePlusOne = (id: string, progress: number) => {
+    handleUpdateProgress({ taskId: id, progress: progress + 1 })
+  }
 
   const columns = useMemo<ColumnDef<ITask>[]>(
     () => [
@@ -435,7 +418,11 @@ function RouteComponent() {
         header: "Sprint",
         accessorKey: "sprint",
         cell: ({ row }) => {
-          const sprintName = sprintsMap.get(row.original.sprint)?.name
+          const sprint = row.original.sprint
+          const sprintName =
+            typeof sprint === "string"
+              ? sprintsMap.get(sprint)?.name
+              : sprint?.name
           return sprintName ? (
             <Text size="sm">{sprintName}</Text>
           ) : (
@@ -449,37 +436,92 @@ function RouteComponent() {
         header: "Người được giao",
         accessorKey: "assignedTo",
         cell: ({ row }) => {
-          const uid = row.original.assignedTo
-          const user = uid ? usersMap.get(uid) : undefined
+          const assignedTo = row.original.assignedTo
+          if (!assignedTo) {
+            return (
+              <Text size="sm" c="dimmed">
+                -
+              </Text>
+            )
+          }
+
+          // If assignedTo is IProfile object
+          if (typeof assignedTo === "object") {
+            return (
+              <Group gap="4">
+                <Avatar size="sm" src={assignedTo.avatarUrl} />
+                <Text size="sm">{assignedTo.name || assignedTo.accountId}</Text>
+              </Group>
+            )
+          }
+
+          // If assignedTo is string (accountId), try to find in usersMap
+          const user = profilesMap.get(assignedTo)
           return (
             <Group gap="4">
-              <Avatar size={"sm"} src={user?.avatarUrl} />
-              <Text size="sm">{user?.name}</Text>
+              <Avatar size="sm" src={user?.avatarUrl} />
+              <Text size="sm">{user?.name || assignedTo}</Text>
             </Group>
           )
         }
       },
       {
-        header: "Trạng thái",
-        accessorKey: "status",
-        cell: ({ getValue }) => {
-          const status = getValue() as ITask["status"]
-          const statusMap: Record<
-            ITask["status"],
-            { color: string; label: string }
-          > = {
-            new: { color: "blue", label: "Mới" },
-            in_progress: { color: "yellow", label: "Đang làm" },
-            completed: { color: "green", label: "Hoàn thành" },
-            archived: { color: "gray", label: "Lưu trữ" },
-            canceled: { color: "red", label: "Hủy" },
-            reviewing: { color: "orange", label: "Đang review" }
-          }
-          const m = statusMap[status]
+        header: "Ước tính",
+        accessorKey: "estimateHours",
+        cell: ({ row }) => {
           return (
-            <Badge color={m.color} variant="dot">
-              {m.label}
-            </Badge>
+            <Text size="sm">
+              {row.original.estimateHours
+                ? `${row.original.estimateHours} giờ`
+                : ""}
+            </Text>
+          )
+        }
+      },
+      {
+        header: "Tiến độ",
+        accessorKey: "progress",
+        cell: ({ row }) => {
+          const task = row.original
+          const progressPercentage =
+            task.aim > 0 ? Math.round((task.progress / task.aim) * 100) : 0
+
+          return (
+            <Stack gap={4}>
+              <Group justify="space-between">
+                <Text size="xs" c="dimmed">
+                  {task.progress}/{task.aim} {task.aimUnit}
+                </Text>
+                <Tooltip
+                  label="Tăng tiến độ"
+                  hidden={task.progress >= task.aim}
+                >
+                  <ActionIcon
+                    size={"xs"}
+                    variant="light"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handlePlusOne(task._id, task.progress)
+                    }}
+                    hidden={task.progress >= task.aim}
+                  >
+                    <IconChevronRight />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
+              <Progress
+                value={progressPercentage}
+                color={
+                  progressPercentage >= 100
+                    ? "teal"
+                    : progressPercentage > 0
+                      ? "yellow"
+                      : "blue"
+                }
+                size="sm"
+                radius="xl"
+              />
+            </Stack>
           )
         }
       },
@@ -534,13 +576,6 @@ function RouteComponent() {
           <Group gap="xs">
             <ActionIcon
               variant="subtle"
-              color="blue"
-              onClick={() => openDetailModal(row.original)}
-            >
-              <IconEye size={18} />
-            </ActionIcon>
-            <ActionIcon
-              variant="subtle"
               color="red"
               onClick={() => openDeleteConfirm(row.original)}
             >
@@ -550,25 +585,8 @@ function RouteComponent() {
         )
       }
     ],
-    [usersMap, allTags, sprintsMap]
+    [profilesMap, allTags, sprintsMap]
   )
-
-  const viewMode = useMemo(() => {
-    return [
-      {
-        label: "Danh sách",
-        value: "list",
-        icon: IconTable
-      },
-      {
-        label: "Bảng Kanban",
-        value: "kanban",
-        icon: IconLayoutKanban
-      }
-    ]
-  }, [])
-
-  const [view, setView] = useState<"list" | "kanban">("list")
 
   return (
     <AppLayout>
@@ -576,16 +594,6 @@ function RouteComponent() {
         <Group justify="space-between">
           <Title order={3}>Quản lý Task hàng tuần</Title>
           <Group>
-            <Group gap={4}>
-              <Text size="sm">Chế độ xem</Text>
-              <SegmentedControl
-                data={viewMode}
-                value={view}
-                onChange={(val) => setView(val as "list" | "kanban")}
-                size="xs"
-              />
-            </Group>
-            <Divider orientation="vertical" />
             <Can roles={["superadmin", "admin"]}>
               <Button
                 variant="light"
@@ -605,56 +613,34 @@ function RouteComponent() {
           </Group>
         </Group>
 
-        {view === "list" ? (
-          <DataTable<ITask, unknown>
-            columns={columns}
-            data={rows}
-            initialPageSize={pageSize}
-            pageSizeOptions={[10, 20, 50, 100]}
-            enableGlobalFilter={false}
-            page={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            onPageSizeChange={(newPageSize: number) => {
-              setPageSize(newPageSize)
-              setPage(1) // Reset về trang 1 khi thay đổi page size
-            }}
-            extraFilters={
-              <TaskFilters
-                onFiltersChange={handleFiltersChange}
-                users={usersList}
-                sprints={sprintsList}
-                initialFilters={filters}
-                view={view}
-              />
-            }
-            extraActions={
-              <Text c="dimmed" size="sm">
-                {isLoading ? "Đang tải..." : `${rows.length} task`}
-              </Text>
-            }
-          />
-        ) : (
-          <>
-            {/* Filters for Kanban view */}
+        <DataTable<ITask, unknown>
+          columns={columns}
+          data={rows}
+          initialPageSize={pageSize}
+          pageSizeOptions={[10, 20, 50, 100]}
+          enableGlobalFilter={false}
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          onPageSizeChange={(newPageSize: number) => {
+            setPageSize(newPageSize)
+            setPage(1) // Reset về trang 1 khi thay đổi page size
+          }}
+          extraFilters={
             <TaskFilters
               onFiltersChange={handleFiltersChange}
-              users={usersList}
+              users={profilesList}
               sprints={sprintsList}
               initialFilters={filters}
-              view={view}
             />
-
-            {/* Kanban Board */}
-            <KanbanBoard
-              filters={filters}
-              usersMap={usersMap}
-              sprintsMap={sprintsMap}
-              onViewTask={openDetailModal}
-              onDeleteTask={openDeleteConfirm}
-            />
-          </>
-        )}
+          }
+          extraActions={
+            <Text c="dimmed" size="sm">
+              {isLoading ? "Đang tải..." : `${rows.length} task`}
+            </Text>
+          }
+          onRowClick={(row) => navigate({ to: `/tasks/${row.original._id}` })}
+        />
       </Stack>
     </AppLayout>
   )

@@ -11,72 +11,64 @@ import {
   Group,
   Paper
 } from "@mantine/core"
-import { IconLogin } from "@tabler/icons-react"
-import { AuthLayout } from "../components/layouts/auth-layout"
+import { IconUserPlus } from "@tabler/icons-react"
+import { AuthLayout } from "../../components/layouts/auth-layout"
 import { useEffect } from "react"
-import { useAuthStore } from "../stores/authState"
+import { useAuthStore } from "../../stores/authState"
 import { useForm } from "@mantine/form"
-import { notifications } from "@mantine/notifications"
+import { TToast } from "../../components/common/toast"
+import { useAuth } from "../../hooks/use-auth"
 import { useMutation } from "@tanstack/react-query"
-import { useAuth } from "../hooks/use-auth"
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/register/")({
   component: RouteComponent
 })
 
 function RouteComponent() {
   const navigate = useNavigate()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated())
-  const setAuth = useAuthStore((s) => s.setAuth)
-  const { login } = useAuth()
+
+  const toast = TToast()
+  const { register } = useAuth()
 
   const form = useForm({
     initialValues: {
+      name: "",
       email: "",
-      password: ""
+      password: "",
+      confirmPassword: ""
     },
     validate: {
+      name: (value: string) =>
+        value.length >= 2 ? null : "Tên phải có ít nhất 2 ký tự",
       email: (value: string) =>
         /^\S+@\S+$/.test(value) ? null : "Email không hợp lệ",
       password: (value: string) =>
-        value.length >= 6 ? null : "Mật khẩu phải có ít nhất 6 ký tự"
+        value.length >= 6 ? null : "Mật khẩu phải có ít nhất 6 ký tự",
+      confirmPassword: (value: string, values: { password: string }) =>
+        value === values.password ? null : "Mật khẩu không khớp"
     }
   })
 
-  const loginMutation = useMutation({
-    mutationFn: login,
-    onSuccess: (response) => {
-      const { accessToken, refreshToken, tokenExp, rtExp, profile } =
-        response.data
-
-      setAuth({
-        accessToken,
-        refreshToken,
-        expiresIn: tokenExp,
-        refreshExpiresIn: rtExp,
-        user: {
-          id: profile.id,
-          email: form.values.email,
-          name: profile.name,
-          avatar: undefined
-        }
+  const { mutate: handleRegister, isPending: loading } = useMutation({
+    mutationFn: (values: {
+      name: string
+      email: string
+      password: string
+      confirmPassword: string
+    }) => register(values),
+    onSuccess: (_data, variables) => {
+      toast.success({
+        title: "Đăng ký thành công",
+        message: `Chào mừng ${variables.name || variables.email}!`
       })
-
-      notifications.show({
-        title: "Đăng nhập thành công",
-        message: `Chào mừng ${profile?.name || "bạn"}!`,
-        color: "green"
-      })
-
       navigate({ to: "/account" })
     },
     onError: (error: any) => {
-      notifications.show({
-        title: "Đăng nhập thất bại",
+      toast.error({
+        title: "Đăng ký thất bại",
         message:
-          error.response?.data?.message ||
-          "Email hoặc mật khẩu không chính xác",
-        color: "red"
+          error?.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại"
       })
     }
   })
@@ -87,15 +79,11 @@ function RouteComponent() {
     }
   }, [isAuthenticated, navigate])
 
-  const handleLogin = (values: { email: string; password: string }) => {
-    loginMutation.mutate(values)
-  }
-
   if (isAuthenticated) return null
 
   return (
     <AuthLayout>
-      <Stack align="center" gap="xl" className="w">
+      <Stack align="center" gap="xl">
         <Stack align="center" gap="md">
           <ThemeIcon
             size="xl"
@@ -103,19 +91,25 @@ function RouteComponent() {
             variant="gradient"
             gradient={{ from: "blue", to: "purple" }}
           >
-            <IconLogin size={32} />
+            <IconUserPlus size={32} />
           </ThemeIcon>
           <Title order={2} size="h3" ta="center" c="dark">
-            Đăng nhập
+            Đăng ký tài khoản
           </Title>
           <Text size="md" c="dimmed" ta="center">
-            Đăng nhập để quản lý công việc của bạn
+            Tạo tài khoản mới để bắt đầu
           </Text>
         </Stack>
 
         <Paper w="100%" p="md" radius="md" withBorder>
-          <form onSubmit={form.onSubmit(handleLogin)}>
+          <form onSubmit={form.onSubmit((values) => handleRegister(values))}>
             <Stack gap="md">
+              <TextInput
+                label="Họ và tên"
+                placeholder="Nguyễn Văn A"
+                required
+                {...form.getInputProps("name")}
+              />
               <TextInput
                 label="Email"
                 placeholder="your@email.com"
@@ -124,17 +118,23 @@ function RouteComponent() {
               />
               <PasswordInput
                 label="Mật khẩu"
-                placeholder="Nhập mật khẩu"
+                placeholder="Nhập mật khẩu (ít nhất 6 ký tự)"
                 required
                 {...form.getInputProps("password")}
               />
-              <Group justify="space-between">
-                <Anchor component={Link} to="/register" size="sm">
-                  Chưa có tài khoản?
-                </Anchor>
-                <Anchor component={Link} to="/forgot-password" size="sm">
-                  Quên mật khẩu?
-                </Anchor>
+              <PasswordInput
+                label="Xác nhận mật khẩu"
+                placeholder="Nhập lại mật khẩu"
+                required
+                {...form.getInputProps("confirmPassword")}
+              />
+              <Group justify="center">
+                <Text size="sm" c="dimmed">
+                  Đã có tài khoản?{" "}
+                  <Anchor component={Link} to="/">
+                    Đăng nhập ngay
+                  </Anchor>
+                </Text>
               </Group>
               <Button
                 type="submit"
@@ -143,16 +143,16 @@ function RouteComponent() {
                 fullWidth
                 variant="gradient"
                 gradient={{ from: "blue", to: "purple", deg: 45 }}
-                loading={loginMutation.isPending}
+                loading={loading}
               >
-                Đăng nhập
+                Đăng ký
               </Button>
             </Stack>
           </form>
         </Paper>
 
         <Text size="xs" ta="center" c="dimmed" opacity={0.7}>
-          Bằng cách đăng nhập, bạn đồng ý với{" "}
+          Bằng cách đăng ký, bạn đồng ý với{" "}
           <Anchor href="/legal" size="xs">
             Điều khoản dịch vụ và Chính sách bảo mật
           </Anchor>

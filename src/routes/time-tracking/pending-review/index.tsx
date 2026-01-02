@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { AppLayout } from "../../../components/layouts/app-layout"
 import { useTimeRequests } from "../../../hooks/use-time-requests"
+import { useProfile } from "../../../hooks/use-profile"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -12,55 +13,36 @@ import type {
 import { DataTable } from "../../../components/common/data-table"
 import {
   ActionIcon,
+  Avatar,
   Badge,
   Button,
+  Divider,
   Group,
+  Select,
   Stack,
   Text,
-  Title,
-  Select,
-  Avatar,
-  Divider,
-  Center
+  Title
 } from "@mantine/core"
 import { IconEye, IconCheck, IconX } from "@tabler/icons-react"
-import { DateInput } from "@mantine/dates"
 import { notifications } from "@mantine/notifications"
 import { modals } from "@mantine/modals"
-import { Can } from "../../../components/common/Can"
-import { useProfile } from "../../../hooks/use-profile"
+import { TIME_REQUEST_STATUS_OPTIONS } from "../../../constants/time-request"
 
-export const Route = createFileRoute("/time-tracking/manage-requests/")({
+export const Route = createFileRoute("/time-tracking/pending-review/")({
   component: RouteComponent
 })
 
 function RouteComponent() {
-  return (
-    <Can
-      roles={["superadmin", "admin"]}
-      fallback={
-        <AppLayout>
-          <Center h={200}>
-            <Text c="dimmed">Bạn không có quyền truy cập trang này</Text>
-          </Center>
-        </AppLayout>
-      }
-    >
-      <ManageRequestsContent />
-    </Can>
-  )
-}
-
-function ManageRequestsContent() {
   const qc = useQueryClient()
-  const { getAllTimeRequests, approveTimeRequest, rejectTimeRequest } =
+  const { getPendingTimeRequests, approveTimeRequest, rejectTimeRequest } =
     useTimeRequests()
   const { publicSearchProfiles } = useProfile()
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-  const [status, setStatus] = useState<TimeRequestStatus | "">("")
-  const [date, setDate] = useState<Date | null>(null)
+  const [statusFilter, setStatusFilter] = useState<
+    TimeRequestStatus | undefined
+  >("pending")
 
   const { data: profilesData } = useQuery({
     queryKey: ["public-profiles"],
@@ -68,19 +50,18 @@ function ManageRequestsContent() {
     staleTime: Infinity
   })
 
-  const usersMap = useMemo(() => {
+  const profilesMap = useMemo(() => {
     const list = profilesData?.data.data ?? []
-    return new Map<string, any>(list.map((u: any) => [u._id, u]))
+    return new Map<string, any>(list.map((p: any) => [p._id, p]))
   }, [profilesData])
 
   const { data, isLoading } = useQuery({
-    queryKey: ["all-time-requests", page, pageSize, status, date],
+    queryKey: ["pending-review-time-requests", page, pageSize, statusFilter],
     queryFn: async () => {
-      const resp = await getAllTimeRequests({
+      const resp = await getPendingTimeRequests({
         page,
         limit: pageSize,
-        status: status || undefined,
-        date: date || undefined
+        status: statusFilter
       })
       return resp.data
     }
@@ -89,7 +70,7 @@ function ManageRequestsContent() {
   const { mutate: handleApprove, isPending: isApproving } = useMutation({
     mutationFn: approveTimeRequest,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["all-time-requests"] })
+      qc.invalidateQueries({ queryKey: ["pending-review-time-requests"] })
       notifications.show({
         title: "Thành công",
         message: "Đã duyệt yêu cầu",
@@ -109,7 +90,7 @@ function ManageRequestsContent() {
   const { mutate: handleReject, isPending: isRejecting } = useMutation({
     mutationFn: rejectTimeRequest,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["all-time-requests"] })
+      qc.invalidateQueries({ queryKey: ["pending-review-time-requests"] })
       notifications.show({
         title: "Thành công",
         message: "Đã từ chối yêu cầu",
@@ -128,12 +109,12 @@ function ManageRequestsContent() {
 
   const openDetailModal = (request: ITimeRequest) => {
     modals.open({
-      title: <b>Chi tiết yêu cầu</b>,
+      title: <b>Chi tiết yêu cầu chờ duyệt</b>,
       size: "xl",
       children: (
-        <ManageRequestDetail
+        <PendingReviewDetail
           request={request}
-          user={usersMap.get(request.createdBy._id)}
+          user={profilesMap.get(request.createdBy._id)}
           onApprove={() => handleApprove(request._id)}
           onReject={() => handleReject(request._id)}
           isApproving={isApproving}
@@ -149,18 +130,19 @@ function ManageRequestsContent() {
         header: "Người tạo",
         accessorKey: "createdBy",
         cell: ({ row }) => {
-          console.log(row.original)
-          return row.original.createdBy ? (
+          const user = profilesMap.get(row.original.createdBy._id)
+          return user ? (
             <Group gap="sm">
+              <Avatar src={user.avatarUrl} radius="xl" size="sm" />
               <div>
                 <Text size="sm" fw={500}>
-                  {row.original.createdBy.name}
+                  {user.name || row.original.createdBy.name}
                 </Text>
               </div>
             </Group>
           ) : (
-            <Text size="sm" c="dimmed">
-              Unknown
+            <Text size="sm" fw={500}>
+              {row.original.createdBy.name}
             </Text>
           )
         }
@@ -221,17 +203,23 @@ function ManageRequestsContent() {
       {
         header: "Trạng thái",
         accessorKey: "status",
-        cell: ({ getValue }) => {
-          const status = getValue() as string
-          const statusMap = {
-            pending: { label: "Chờ duyệt", color: "yellow" },
-            approved: { label: "Đã duyệt", color: "green" },
-            rejected: { label: "Từ chối", color: "red" }
-          }
-          const config = statusMap[status as keyof typeof statusMap]
+        cell: ({ row }) => {
           return (
-            <Badge color={config.color} variant="light">
-              {config.label}
+            <Badge
+              color={
+                row.original.status === "approved"
+                  ? "green"
+                  : row.original.status === "rejected"
+                    ? "red"
+                    : "yellow"
+              }
+              variant="light"
+            >
+              {
+                TIME_REQUEST_STATUS_OPTIONS.find(
+                  (o) => o.value === row.original.status
+                )?.label
+              }
             </Badge>
           )
         }
@@ -258,27 +246,63 @@ function ManageRequestsContent() {
             >
               <IconEye size={18} />
             </ActionIcon>
+            <ActionIcon
+              variant="subtle"
+              color="green"
+              onClick={() => {
+                modals.openConfirmModal({
+                  title: "Xác nhận duyệt",
+                  children: (
+                    <Text size="sm">
+                      Bạn có chắc chắn muốn duyệt yêu cầu này không?
+                    </Text>
+                  ),
+                  labels: { confirm: "Duyệt", cancel: "Hủy" },
+                  confirmProps: { color: "green" },
+                  onConfirm: () => handleApprove(row.original._id)
+                })
+              }}
+            >
+              <IconCheck size={18} />
+            </ActionIcon>
+            <ActionIcon
+              variant="subtle"
+              color="red"
+              onClick={() => {
+                modals.openConfirmModal({
+                  title: "Xác nhận từ chối",
+                  children: (
+                    <Text size="sm">
+                      Bạn có chắc chắn muốn từ chối yêu cầu này không?
+                    </Text>
+                  ),
+                  labels: { confirm: "Từ chối", cancel: "Hủy" },
+                  confirmProps: { color: "red" },
+                  onConfirm: () => handleReject(row.original._id)
+                })
+              }}
+            >
+              <IconX size={18} />
+            </ActionIcon>
           </Group>
         )
       }
     ],
-    [usersMap]
+    [profilesMap, handleApprove, handleReject]
   )
 
   const rows = data?.data ?? []
   const total = data?.total ?? 0
 
-  const statusOptions = [
-    { value: "", label: "Tất cả" },
-    { value: "pending", label: "Chờ duyệt" },
-    { value: "approved", label: "Đã duyệt" },
-    { value: "rejected", label: "Từ chối" }
-  ]
-
   return (
     <AppLayout>
       <Stack gap="md">
-        <Title order={3}>Quản lý yêu cầu thời gian</Title>
+        <Group justify="space-between">
+          <Title order={3}>Yêu cầu chờ duyệt của tôi</Title>
+          <Badge size="lg" color="yellow" variant="light">
+            {total} yêu cầu chờ duyệt
+          </Badge>
+        </Group>
 
         <DataTable<ITimeRequest, unknown>
           columns={columns}
@@ -294,23 +318,19 @@ function ManageRequestsContent() {
             setPage(1)
           }}
           extraFilters={
-            <Group gap="sm">
+            <>
               <Select
+                data={TIME_REQUEST_STATUS_OPTIONS}
+                value={statusFilter}
                 placeholder="Trạng thái"
-                value={status}
-                onChange={(v) => setStatus((v as TimeRequestStatus) || "")}
-                data={statusOptions}
-                style={{ minWidth: 150 }}
-              />
-              <DateInput
-                placeholder="Chọn ngày"
-                value={date}
-                onChange={setDate}
+                onChange={(value) =>
+                  setStatusFilter(
+                    !!value ? (value as TimeRequestStatus) : undefined
+                  )
+                }
                 clearable
-                valueFormat="DD/MM/YYYY"
-                style={{ minWidth: 150 }}
               />
-            </Group>
+            </>
           }
           extraActions={
             <Text c="dimmed" size="sm">
@@ -323,7 +343,7 @@ function ManageRequestsContent() {
   )
 }
 
-interface ManageRequestDetailProps {
+interface PendingReviewDetailProps {
   request: ITimeRequest
   user: any
   onApprove: () => void
@@ -332,14 +352,14 @@ interface ManageRequestDetailProps {
   isRejecting: boolean
 }
 
-function ManageRequestDetail({
+function PendingReviewDetail({
   request,
   user,
   onApprove,
   onReject,
   isApproving,
   isRejecting
-}: ManageRequestDetailProps) {
+}: PendingReviewDetailProps) {
   const typeMap = {
     overtime: { label: "Tăng ca", color: "blue" },
     day_off: { label: "Nghỉ phép", color: "green" },
@@ -367,13 +387,12 @@ function ManageRequestDetail({
               <Text size="md" fw={500}>
                 {user.name}
               </Text>
-              <Text c="dimmed" size="xs">
-                {user.email}
-              </Text>
             </div>
           </Group>
         ) : (
-          <Text c="dimmed">Unknown User</Text>
+          <Text size="md" fw={500}>
+            {request.createdBy.name}
+          </Text>
         )}
       </div>
 
@@ -506,26 +525,24 @@ function ManageRequestDetail({
         </div>
       </Group>
 
-      {request.status === "pending" && (
-        <Group justify="flex-end" mt="md">
-          <Button
-            variant="light"
-            color="red"
-            leftSection={<IconX />}
-            onClick={onReject}
-            loading={isRejecting}
-          >
-            Từ chối
-          </Button>
-          <Button
-            leftSection={<IconCheck />}
-            onClick={onApprove}
-            loading={isApproving}
-          >
-            Duyệt
-          </Button>
-        </Group>
-      )}
+      <Group justify="flex-end" mt="md">
+        <Button
+          variant="light"
+          color="red"
+          leftSection={<IconX />}
+          onClick={onReject}
+          loading={isRejecting}
+        >
+          Từ chối
+        </Button>
+        <Button
+          leftSection={<IconCheck />}
+          onClick={onApprove}
+          loading={isApproving}
+        >
+          Duyệt
+        </Button>
+      </Group>
     </Stack>
   )
 }

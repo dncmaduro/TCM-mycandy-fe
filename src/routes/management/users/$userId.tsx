@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { AppLayout } from "../../../components/layouts/app-layout"
-import { useUsers } from "../../../hooks/use-users"
+import { useProfile } from "../../../hooks/use-profile"
 import { useRoles } from "../../../hooks/use-roles"
 import {
   Avatar,
@@ -9,23 +9,28 @@ import {
   Button,
   Divider,
   Group,
-  Select,
   Stack,
   Text,
   Title,
-  Paper
+  Paper,
+  MultiSelect
 } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { Can } from "../../../components/common/Can"
-import type { Role } from "../../../constants/role"
-import { useState, useEffect } from "react"
+import {
+  type Role,
+  ROLE_OPTIONS,
+  getRoleLabel,
+  getRoleColor
+} from "../../../constants/role"
+import { useState } from "react"
 
 export const Route = createFileRoute("/management/users/$userId")({
   component: RouteComponent
 })
 
 function RouteComponent() {
-  const { getUser } = useUsers()
+  const { getProfile } = useProfile()
   const { getRole, setRole } = useRoles()
   const params = Route.useParams()
   const navigate = Route.useNavigate()
@@ -33,8 +38,8 @@ function RouteComponent() {
   const userId = params.userId as string
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["user", userId],
-    queryFn: () => getUser(userId),
+    queryKey: ["profile", userId],
+    queryFn: () => getProfile({ id: userId }),
     enabled: !!userId
   })
 
@@ -44,29 +49,35 @@ function RouteComponent() {
     enabled: !!userId
   })
 
-  const user = data?.data.user
-  const currentRole = (roleResp?.data.role as Role | undefined) ?? undefined
-  const [role, setRoleState] = useState<Role | undefined>(currentRole)
-  useEffect(() => setRoleState(currentRole), [currentRole])
+  const profile = data?.data.profile
+  const currentRoles = (roleResp?.data.roles as Role[]) ?? []
+  const [selectedRoles, setSelectedRoles] = useState<Role[]>(currentRoles)
 
-  const { mutate: saveRole, isPending: isSaving } = useMutation({
-    mutationFn: async (r: Role) => (await setRole(userId, { role: r })).data,
+  const { mutate: saveRoles, isPending: isSaving } = useMutation({
+    mutationFn: async (roles: Role[]) =>
+      (await setRole(userId, { roles })).data,
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["user-role", userId] })
       notifications.show({
         title: "Thành công",
-        message: "Đã cập nhật role người dùng",
+        message: "Đã cập nhật roles người dùng",
         color: "green"
       })
     },
     onError: (error) => {
       notifications.show({
         title: "Lỗi",
-        message: error.message || "Không thể cập nhật role",
+        message: error.message || "Không thể cập nhật roles",
         color: "red"
       })
     }
   })
+
+  const hasRolesChanged =
+    JSON.stringify([...selectedRoles].sort()) !==
+    JSON.stringify([...currentRoles].sort())
+
+  console.log(data)
 
   return (
     <AppLayout>
@@ -85,40 +96,40 @@ function RouteComponent() {
           <Text c="dimmed">Đang tải...</Text>
         ) : error ? (
           <Text c="red">Không thể tải người dùng.</Text>
-        ) : !user ? (
+        ) : !profile ? (
           <Text c="dimmed">Không tìm thấy người dùng.</Text>
         ) : (
           <Stack gap="lg">
             {/* User Profile Card */}
             <Paper p="lg" radius="md" withBorder>
               <Group align="flex-start" gap="lg">
-                <Avatar size={80} radius="md" src={user.avatarUrl} />
+                <Avatar size={80} radius="md" src={profile.avatarUrl} />
                 <Stack gap="xs" style={{ flex: 1 }}>
                   <Group gap="sm" align="center">
-                    <Title order={2}>{user.name ?? user.email}</Title>
+                    <Title order={2}>{profile.name || "Chưa có tên"}</Title>
                     <Badge
                       size="lg"
                       variant="light"
                       color={
-                        user.status === "active"
+                        profile.status === "active"
                           ? "green"
-                          : user.status === "pending"
+                          : profile.status === "pending"
                             ? "yellow"
                             : "red"
                       }
                     >
-                      {user.status === "active" && "Hoạt động"}
-                      {user.status === "pending" && "Chờ duyệt"}
-                      {user.status === "rejected" && "Từ chối"}
-                      {user.status === "suspended" && "Tạm khóa"}
+                      {profile.status === "active" && "Hoạt động"}
+                      {profile.status === "pending" && "Chờ duyệt"}
+                      {profile.status === "rejected" && "Từ chối"}
+                      {profile.status === "suspended" && "Tạm khóa"}
                     </Badge>
                   </Group>
                   <Text size="lg" c="dimmed">
-                    {user.email}
+                    ID: {profile._id}
                   </Text>
                   <Text size="sm" c="dimmed">
                     Tham gia từ{" "}
-                    {new Date(user.createdAt).toLocaleDateString("vi-VN", {
+                    {new Date(profile.createdAt).toLocaleDateString("vi-VN", {
                       year: "numeric",
                       month: "long",
                       day: "numeric"
@@ -138,61 +149,63 @@ function RouteComponent() {
                 <Group align="flex-start" gap="xl">
                   <Stack gap="xs">
                     <Text fw={600} size="sm" c="dimmed">
-                      Role hiện tại
+                      Roles hiện tại
                     </Text>
                     {isRoleLoading ? (
                       <Text size="sm" c="dimmed">
                         Đang tải...
                       </Text>
-                    ) : (
-                      <Badge
-                        size="lg"
-                        variant="filled"
-                        color={
-                          currentRole === "superadmin"
-                            ? "red"
-                            : currentRole === "admin"
-                              ? "blue"
-                              : "gray"
-                        }
-                      >
-                        {currentRole === "superadmin" && "Super Admin"}
-                        {currentRole === "admin" && "Admin"}
-                        {currentRole === "user" && "User"}
-                        {!currentRole && "(Chưa có)"}
+                    ) : currentRoles.length === 0 ? (
+                      <Badge size="lg" variant="light" color="gray">
+                        (Chưa có role)
                       </Badge>
+                    ) : (
+                      <Group gap="xs">
+                        {currentRoles.map((r) => (
+                          <Badge
+                            key={r}
+                            size="lg"
+                            variant="filled"
+                            color={getRoleColor(r)}
+                          >
+                            {getRoleLabel(r)}
+                          </Badge>
+                        ))}
+                      </Group>
                     )}
                   </Stack>
 
                   <Can roles="superadmin" fallback={null}>
-                    <Stack gap="xs" style={{ flex: 1, maxWidth: 300 }}>
+                    <Stack gap="xs" style={{ flex: 1, maxWidth: 400 }}>
                       <Text fw={600} size="sm" c="dimmed">
-                        Cập nhật role
+                        Cập nhật roles
                       </Text>
-                      <Group gap="sm">
-                        <Select
-                          placeholder="Chọn role mới"
-                          data={[
-                            { value: "user", label: "User" },
-                            { value: "admin", label: "Admin" },
-                            { value: "superadmin", label: "Super Admin" }
-                          ]}
-                          value={role}
-                          onChange={(v) =>
-                            setRoleState((v as Role) ?? undefined)
+                      <Group gap="sm" align="flex-start">
+                        <MultiSelect
+                          placeholder="Chọn roles"
+                          data={ROLE_OPTIONS}
+                          value={selectedRoles}
+                          onChange={(values) =>
+                            setSelectedRoles(values as Role[])
                           }
                           style={{ flex: 1 }}
                           clearable
+                          searchable={false}
                         />
                         <Button
-                          disabled={!role || role === currentRole}
+                          disabled={!selectedRoles.length || !hasRolesChanged}
                           loading={isSaving}
-                          onClick={() => role && saveRole(role)}
+                          onClick={() =>
+                            selectedRoles.length && saveRoles(selectedRoles)
+                          }
                           variant="filled"
                         >
                           Lưu
                         </Button>
                       </Group>
+                      <Text size="xs" c="dimmed">
+                        Chọn nhiều roles cho người dùng này
+                      </Text>
                     </Stack>
                   </Can>
                 </Group>

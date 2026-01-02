@@ -3,31 +3,41 @@ import { AppLayout } from "../../../components/layouts/app-layout"
 import {
   Title,
   Stack,
-  Paper,
-  Table,
   Group,
   Avatar,
   Text,
-  Badge,
   Select,
-  Loader,
-  Center
+  Progress
 } from "@mantine/core"
 import { useTasks } from "../../../hooks/use-tasks"
-import { useUsers } from "../../../hooks/use-users"
+import { useProfile } from "../../../hooks/use-profile"
 import { useQuery } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
+import { DataTable } from "../../../components/common/data-table"
+import type { ColumnDef } from "@tanstack/react-table"
 
 export const Route = createFileRoute("/tasks/performance/")({
   component: RouteComponent
 })
 
-type SortType = "completedRatio" | "completedCount" | "totalCount"
+type SortType = "taskRatio" | "unitRatio" | "completedTasks" | "completedUnits"
+
+type StatRow = {
+  profile: {
+    _id: string
+    name: string
+  }
+  totalTasks: number
+  totalUnits: number
+  completedTasks: number
+  completedUnits: number
+  totalEstimateHours: number
+}
 
 function RouteComponent() {
   const { getAllUsersCurrentSprintStats } = useTasks()
-  const { publicSearchUsers } = useUsers()
-  const [sortBy, setSortBy] = useState<SortType>("completedRatio")
+  const { publicSearchProfiles } = useProfile()
+  const [sortBy, setSortBy] = useState<SortType>("taskRatio")
 
   const { data: statsData, isLoading: statsLoading } = useQuery({
     queryKey: ["all-users-current-sprint-stats"],
@@ -36,45 +46,185 @@ function RouteComponent() {
   })
 
   const { data: usersData, isLoading: usersLoading } = useQuery({
-    queryKey: ["public-users"],
-    queryFn: () => publicSearchUsers({ limit: 300, page: 1 }),
+    queryKey: ["public-profiles"],
+    queryFn: () => publicSearchProfiles({ limit: 300, page: 1 }),
     staleTime: Infinity
   })
 
   const usersMap = useMemo(() => {
     const list = usersData?.data?.data ?? []
-    return new Map<string, any>(list.map((u: any) => [u._id, u]))
+    return new Map<string, any>(list.map((u) => [u._id, u]))
   }, [usersData])
 
   const sortedStats = useMemo(() => {
     const stats = statsData?.data?.users || []
 
     return [...stats].sort((a, b) => {
-      const totalA = a.new + a.in_progress + a.reviewing + a.completed
-      const totalB = b.new + b.in_progress + b.reviewing + b.completed
-      const ratioA = totalA > 0 ? (a.completed / totalA) * 100 : 0
-      const ratioB = totalB > 0 ? (b.completed / totalB) * 100 : 0
+      const taskRatioA =
+        a.totalTasks > 0 ? (a.completedTasks / a.totalTasks) * 100 : 0
+      const taskRatioB =
+        b.totalTasks > 0 ? (b.completedTasks / b.totalTasks) * 100 : 0
+      const unitRatioA =
+        a.totalUnits > 0 ? (a.completedUnits / a.totalUnits) * 100 : 0
+      const unitRatioB =
+        b.totalUnits > 0 ? (b.completedUnits / b.totalUnits) * 100 : 0
 
       switch (sortBy) {
-        case "completedRatio":
-          return ratioB - ratioA
-        case "completedCount":
-          return b.completed - a.completed
-        case "totalCount":
-          return totalB - totalA
+        case "taskRatio":
+          return taskRatioB - taskRatioA
+        case "unitRatio":
+          return unitRatioB - unitRatioA
+        case "completedTasks":
+          return b.completedTasks - a.completedTasks
+        case "completedUnits":
+          return b.completedUnits - a.completedUnits
         default:
           return 0
       }
     })
   }, [statsData, sortBy])
 
-  const isLoading = statsLoading || usersLoading
-
   const sortOptions = [
-    { value: "completedRatio", label: "Tỉ lệ hoàn thành" },
-    { value: "completedCount", label: "Số task hoàn thành" },
-    { value: "totalCount", label: "Tổng số task" }
+    { value: "taskRatio", label: "Tỉ lệ hoàn thành task" },
+    { value: "unitRatio", label: "Tỉ lệ hoàn thành unit" },
+    { value: "completedTasks", label: "Số task hoàn thành" },
+    { value: "completedUnits", label: "Số unit hoàn thành" }
   ]
+
+  const columns = useMemo<ColumnDef<StatRow>[]>(
+    () => [
+      {
+        header: "Thành viên",
+        accessorKey: "profile",
+        cell: ({ row }) => {
+          const user = usersMap.get(row.original.profile._id)
+          return (
+            <Group gap="sm">
+              <Avatar src={user?.avatarUrl} radius="xl" size="sm" />
+              <div>
+                <Text size="sm" fw={500}>
+                  {row.original.profile.name || user?.name || "Unknown"}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {user?.accountId}
+                </Text>
+              </div>
+            </Group>
+          )
+        }
+      },
+      {
+        header: "Số task hoàn thành",
+        accessorKey: "completedTasks",
+        cell: ({ row }) => {
+          const taskRatio =
+            row.original.totalTasks > 0
+              ? Math.round(
+                  (row.original.completedTasks / row.original.totalTasks) * 100
+                )
+              : 0
+          return (
+            <Stack gap={4}>
+              <Text size="xs" c="dimmed" ta="center">
+                {row.original.completedTasks}/{row.original.totalTasks} task
+              </Text>
+              <Progress
+                value={taskRatio}
+                color={
+                  taskRatio >= 70 ? "teal" : taskRatio >= 40 ? "yellow" : "blue"
+                }
+                size="md"
+                radius="xl"
+              />
+            </Stack>
+          )
+        }
+      },
+      {
+        header: "Tỉ lệ hoàn thành task",
+        accessorKey: "taskRatio",
+        cell: ({ row }) => {
+          const taskRatio =
+            row.original.totalTasks > 0
+              ? Math.round(
+                  (row.original.completedTasks / row.original.totalTasks) * 100
+                )
+              : 0
+          return (
+            <Text
+              size="lg"
+              fw={700}
+              c={taskRatio >= 70 ? "teal" : taskRatio >= 40 ? "yellow" : "blue"}
+              ta="center"
+            >
+              {taskRatio}%
+            </Text>
+          )
+        }
+      },
+      {
+        header: "Tổng số giờ ước tính",
+        accessorKey: "totalEstimatedHours",
+        cell: ({ row }) => {
+          return (
+            <Text size="lg" fw={700} ta="center">
+              {row.original.totalEstimateHours} giờ
+            </Text>
+          )
+        }
+      },
+      {
+        header: "Số unit hoàn thành",
+        accessorKey: "completedUnits",
+        cell: ({ row }) => {
+          const unitRatio =
+            row.original.totalUnits > 0
+              ? Math.round(
+                  (row.original.completedUnits / row.original.totalUnits) * 100
+                )
+              : 0
+          return (
+            <Stack gap={4}>
+              <Text size="xs" c="dimmed" ta="center">
+                {row.original.completedUnits}/{row.original.totalUnits} unit
+              </Text>
+              <Progress
+                value={unitRatio}
+                color={
+                  unitRatio >= 70 ? "teal" : unitRatio >= 40 ? "yellow" : "blue"
+                }
+                size="md"
+                radius="xl"
+              />
+            </Stack>
+          )
+        }
+      },
+      {
+        header: "Tỉ lệ hoàn thành unit",
+        accessorKey: "unitRatio",
+        cell: ({ row }) => {
+          const unitRatio =
+            row.original.totalUnits > 0
+              ? Math.round(
+                  (row.original.completedUnits / row.original.totalUnits) * 100
+                )
+              : 0
+          return (
+            <Text
+              size="lg"
+              fw={700}
+              c={unitRatio >= 70 ? "teal" : unitRatio >= 40 ? "yellow" : "blue"}
+              ta="center"
+            >
+              {unitRatio}%
+            </Text>
+          )
+        }
+      }
+    ],
+    [usersMap]
+  )
 
   return (
     <AppLayout>
@@ -95,105 +245,20 @@ function RouteComponent() {
           />
         </Group>
 
-        <Paper withBorder radius="md">
-          {isLoading ? (
-            <Center p="xl">
-              <Loader />
-            </Center>
-          ) : (
-            <Table.ScrollContainer minWidth={700}>
-              <Table striped highlightOnHover>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>Thành viên</Table.Th>
-                    <Table.Th style={{ textAlign: "center" }}>Mới</Table.Th>
-                    <Table.Th style={{ textAlign: "center" }}>
-                      Đang làm
-                    </Table.Th>
-                    <Table.Th style={{ textAlign: "center" }}>Review</Table.Th>
-                    <Table.Th style={{ textAlign: "center" }}>
-                      Hoàn thành
-                    </Table.Th>
-                    <Table.Th style={{ textAlign: "center" }}>Tổng</Table.Th>
-                    <Table.Th style={{ textAlign: "center" }}>Tỉ lệ</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {sortedStats.map((stat) => {
-                    const user = usersMap.get(stat.userId)
-                    const total =
-                      stat.new +
-                      stat.in_progress +
-                      stat.reviewing +
-                      stat.completed
-                    const ratio =
-                      total > 0 ? Math.round((stat.completed / total) * 100) : 0
-
-                    return (
-                      <Table.Tr key={stat.userId}>
-                        <Table.Td>
-                          <Group gap="sm">
-                            <Avatar
-                              src={user?.avatarUrl}
-                              radius="xl"
-                              size="sm"
-                            />
-                            <div>
-                              <Text size="sm" fw={500}>
-                                {user?.name || "Unknown"}
-                              </Text>
-                              <Text size="xs" c="dimmed">
-                                {user?.email}
-                              </Text>
-                            </div>
-                          </Group>
-                        </Table.Td>
-                        <Table.Td style={{ textAlign: "center" }}>
-                          <Badge variant="light" color="blue">
-                            {stat.new}
-                          </Badge>
-                        </Table.Td>
-                        <Table.Td style={{ textAlign: "center" }}>
-                          <Badge variant="light" color="yellow">
-                            {stat.in_progress}
-                          </Badge>
-                        </Table.Td>
-                        <Table.Td style={{ textAlign: "center" }}>
-                          <Badge variant="light" color="orange">
-                            {stat.reviewing}
-                          </Badge>
-                        </Table.Td>
-                        <Table.Td style={{ textAlign: "center" }}>
-                          <Badge variant="light" color="teal">
-                            {stat.completed}
-                          </Badge>
-                        </Table.Td>
-                        <Table.Td style={{ textAlign: "center" }}>
-                          <Text fw={600}>{total}</Text>
-                        </Table.Td>
-                        <Table.Td style={{ textAlign: "center" }}>
-                          <Badge
-                            size="lg"
-                            variant="filled"
-                            color={
-                              ratio >= 70
-                                ? "teal"
-                                : ratio >= 40
-                                  ? "yellow"
-                                  : "red"
-                            }
-                          >
-                            {ratio}%
-                          </Badge>
-                        </Table.Td>
-                      </Table.Tr>
-                    )
-                  })}
-                </Table.Tbody>
-              </Table>
-            </Table.ScrollContainer>
-          )}
-        </Paper>
+        <DataTable<StatRow, unknown>
+          columns={columns}
+          data={sortedStats}
+          enableGlobalFilter={false}
+          initialPageSize={20}
+          pageSizeOptions={[10, 20, 50, 100]}
+          extraActions={
+            <Text c="dimmed" size="sm">
+              {statsLoading || usersLoading
+                ? "Đang tải..."
+                : `${sortedStats.length} thành viên`}
+            </Text>
+          }
+        />
       </Stack>
     </AppLayout>
   )
